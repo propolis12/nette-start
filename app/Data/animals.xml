@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<animals>
+    <animal>
+        <name>Lion</name>
+        <category>Big Cat</category>
+        <image>lion.png</image>
+        <status>available</status>
+        <age>5</age>
+    </animal>
+
+    <animal>
+        <name>Parrot</name>
+        <category>Bird</category>
+        <image>parrot.png</image>
+        <status>reserved</status>
+        <age>2</age>
+    </animal>
+
+    <animal>
+        <name>Dog</name>
+        <category>Mammal</category>
+        <image>dog.png</image>
+        <status>sold</status>
+    </animal>
+</animals>
