@@ -25,15 +25,15 @@ class Helpers
 	public static int $maxLength = 100;
 
 	public static array $typePatterns = [
-		'^_' => Type::Text, // PostgreSQL arrays
-		'(TINY|SMALL|SHORT|MEDIUM|BIG|LONG)(INT)?|INT(EGER|\d+| IDENTITY| UNSIGNED)?|(SMALL|BIG|)SERIAL\d*|COUNTER|YEAR|BYTE|LONGLONG|UNSIGNED BIG INT' => Type::Integer,
-		'(NEW)?DEC(IMAL)?(\(.*)?|NUMERIC|(SMALL)?MONEY|CURRENCY|NUMBER' => Type::Decimal,
-		'REAL|DOUBLE( PRECISION)?|FLOAT\d*' => Type::Float,
-		'BOOL(EAN)?' => Type::Boolean,
-		'TIME' => Type::Time,
-		'DATE' => Type::Date,
-		'(SMALL)?DATETIME(OFFSET)?\d*|TIME(STAMP.*)?' => Type::DateTime,
-		'BYTEA|(TINY|MEDIUM|LONG|)BLOB|(LONG )?(VAR)?BINARY|IMAGE' => Type::Binary,
+		'^_' => IStructure::FIELD_TEXT, // PostgreSQL arrays
+		'(TINY|SMALL|SHORT|MEDIUM|BIG|LONG)(INT)?|INT(EGER|\d+| IDENTITY| UNSIGNED)?|(SMALL|BIG|)SERIAL\d*|COUNTER|YEAR|BYTE|LONGLONG|UNSIGNED BIG INT' => IStructure::FIELD_INTEGER,
+		'(NEW)?DEC(IMAL)?(\(.*)?|NUMERIC|(SMALL)?MONEY|CURRENCY|NUMBER' => IStructure::FIELD_DECIMAL,
+		'REAL|DOUBLE( PRECISION)?|FLOAT\d*' => IStructure::FIELD_FLOAT,
+		'BOOL(EAN)?' => IStructure::FIELD_BOOL,
+		'TIME' => IStructure::FIELD_TIME,
+		'DATE' => IStructure::FIELD_DATE,
+		'(SMALL)?DATETIME(OFFSET)?\d*|TIME(STAMP.*)?' => IStructure::FIELD_DATETIME,
+		'BYTEA|(TINY|MEDIUM|LONG|)BLOB|(LONG )?(VAR)?BINARY|IMAGE' => IStructure::FIELD_BINARY,
 	];
 
 
@@ -165,7 +165,6 @@ class Helpers
 
 	/**
 	 * Common column type detection.
-	 * @return array<Type::*>
 	 */
 	public static function detectTypes(\PDOStatement $statement): array
 	{
@@ -184,14 +183,13 @@ class Helpers
 
 	/**
 	 * Heuristic column type detection.
-	 * @return Type::*
 	 * @internal
 	 */
 	public static function detectType(string $type): string
 	{
 		static $cache;
 		if (!isset($cache[$type])) {
-			$cache[$type] = Type::Text;
+			$cache[$type] = 'string';
 			foreach (self::$typePatterns as $s => $val) {
 				if (preg_match("#^($s)$#i", $type)) {
 					return $cache[$type] = $val;
@@ -212,29 +210,29 @@ class Helpers
 	{
 		foreach ($resultSet->getColumnTypes() as $key => $type) {
 			$value = $row[$key];
-			if ($value === null || $value === false || $type === Type::Text) {
+			if ($value === null || $value === false || $type === IStructure::FIELD_TEXT) {
 				// do nothing
-			} elseif ($type === Type::Integer) {
+			} elseif ($type === IStructure::FIELD_INTEGER) {
 				$row[$key] = is_float($tmp = $value * 1) ? $value : $tmp;
 
-			} elseif ($type === Type::Float || $type === Type::Decimal) {
+			} elseif ($type === IStructure::FIELD_FLOAT || $type === IStructure::FIELD_DECIMAL) {
 				if (is_string($value) && str_starts_with($value, '.')) {
 					$value = '0' . $value;
 				}
 				$row[$key] = (float) $value;
 
-			} elseif ($type === Type::Boolean) {
+			} elseif ($type === IStructure::FIELD_BOOL) {
 				$row[$key] = $value && $value !== 'f' && $value !== 'F';
 
-			} elseif ($type === Type::DateTime || $type === Type::Date) {
+			} elseif ($type === IStructure::FIELD_DATETIME || $type === IStructure::FIELD_DATE) {
 				$row[$key] = str_starts_with($value, '0000-00')
 					? null
 					: new $dateTimeClass($value);
 
-			} elseif ($type === Type::Time) {
+			} elseif ($type === IStructure::FIELD_TIME) {
 				$row[$key] = (new $dateTimeClass($value))->setDate(1, 1, 1);
 
-			} elseif ($type === Type::Interval) {
+			} elseif ($type === IStructure::FIELD_TIME_INTERVAL) {
 				preg_match('#^(-?)(\d+)\D(\d+)\D(\d+)(\.\d+)?$#D', $value, $m);
 				$row[$key] = new \DateInterval("PT$m[2]H$m[3]M$m[4]S");
 				$row[$key]->f = isset($m[5]) ? (float) $m[5] : 0.0;
@@ -390,5 +388,18 @@ class Helpers
 		}
 
 		return implode(', ', $duplicates);
+	}
+
+
+	/** @return array{type: string, length: ?null, scale: ?null, parameters: ?string} */
+	public static function parseColumnType(string $type): array
+	{
+		preg_match('/^([^(]+)(?:\((?:(\d+)(?:,(\d+))?|([^)]+))\))?/', $type, $m, PREG_UNMATCHED_AS_NULL);
+		return [
+			'type' => $m[1],
+			'length' => isset($m[2]) ? (int) $m[2] : null,
+			'scale' => isset($m[3]) ? (int) $m[3] : null,
+			'parameters' => $m[4] ?? null,
+		];
 	}
 }

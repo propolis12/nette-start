@@ -4,17 +4,25 @@ namespace App\Entity;
 
 class Animal
 {
+    private int $id;
+
     private string $name;
-    private string $category;
+
+    private Category $category;
+
     private string $image;
+
     private string $status;
 
-    public function __construct(string $name, string $category, string $image, string $status)
+    public function getId(): int
     {
-        $this->name = $name;
-        $this->category = $category;
-        $this->image = $image;
-        $this->status = $status;
+        return $this->id;
+    }
+
+    public function setId(int $id): Animal
+    {
+        $this->id = $id;
+        return $this;
     }
 
     // Getters
@@ -23,7 +31,7 @@ class Animal
         return $this->name;
     }
 
-    public function getCategory(): string
+    public function getCategory(): Category
     {
         return $this->category;
     }
@@ -39,24 +47,28 @@ class Animal
     }
 
     // Setters
-    public function setName(string $name): void
+    public function setName(string $name): Animal
     {
         $this->name = $name;
+        return $this;
     }
 
-    public function setCategory(string $category): void
+    public function setCategory(Category $category): Animal
     {
         $this->category = $category;
+        return $this;
     }
 
-    public function setImage(string $image): void
+    public function setImage(string $image): Animal
     {
         $this->image = $image;
+        return $this;
     }
 
-    public function setStatus(string $status): void
+    public function setStatus(string $status): Animal
     {
         $this->status = $status;
+        return $this;
     }
 
     // Method to return array representation (for XML or API usage)

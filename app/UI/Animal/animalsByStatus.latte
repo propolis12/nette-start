@@ -1,0 +1,6 @@
+{block content}
+        <div n:foreach="$animals as $animal">
+            <div>ID of animal {$animal->getId()}</div>
+            <div>Name of category {$animal->getCategory()->getName()}</div>
+            <div>status {$animal->getStatus()}</div>
+        </div>

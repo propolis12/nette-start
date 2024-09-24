@@ -23,19 +23,19 @@ use Nette\Database\Explorer;
  */
 class Selection implements \Iterator, IRowContainer, \ArrayAccess, \Countable
 {
-	protected Explorer $explorer;
+	protected readonly Explorer $explorer;
 
 	/** back compatibility */
 	protected Explorer $context;
-	protected Conventions $conventions;
-	protected ?Nette\Caching\Cache $cache;
+	protected readonly Conventions $conventions;
+	protected readonly ?Nette\Caching\Cache $cache;
 	protected SqlBuilder $sqlBuilder;
 
 	/** table name */
-	protected string $name;
+	protected readonly string $name;
 
 	/** @var string|string[]|null primary key field name */
-	protected string|array|null $primary;
+	protected readonly string|array|null $primary;
 
 	/** primary column sequence name, false for autodetection */
 	protected string|bool|null $primarySequence = false;
@@ -81,7 +81,7 @@ class Selection implements \Iterator, IRowContainer, \ArrayAccess, \Countable
 		$this->name = $tableName;
 
 		$this->cache = $cacheStorage
-			? new Nette\Caching\Cache($cacheStorage, 'Nette.Database.' . md5($explorer->getConnection()->getDsn()))
+			? new Nette\Caching\Cache($cacheStorage, 'Nette.Database.' . hash('xxh128', $explorer->getConnection()->getDsn()))
 			: null;
 		$this->primary = $conventions->getPrimary($tableName);
 		$this->sqlBuilder = new SqlBuilder($tableName, $explorer);
@@ -451,7 +451,7 @@ class Selection implements \Iterator, IRowContainer, \ArrayAccess, \Countable
 			return $this->explorer->query($query, ...$selection->getSqlBuilder()->getParameters())->fetch()->groupaggregate;
 		} else {
 			$selection->select($function);
-			foreach ($selection->fetch() as $val) {
+			foreach ($selection->fetch() ?? [] as $val) {
 				return $val;
 			}
 			return null;

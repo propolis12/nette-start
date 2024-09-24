@@ -287,7 +287,7 @@ class ActiveRow implements \IteratorAggregate, IRow
 	}
 
 
-	public function __unset(string $key): never
+	public function __unset(string $key): void
 	{
 		throw new Nette\DeprecatedException('ActiveRow is read-only.');
 	}

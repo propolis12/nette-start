@@ -21,7 +21,7 @@ class ResultSet implements \Iterator, IRowContainer
 	private ?\PDOStatement $pdoStatement = null;
 
 	/** @var callable(array, ResultSet): array */
-	private $normalizer;
+	private readonly mixed $normalizer;
 	private Row|false|null $lastRow = null;
 	private int $lastRowKey = -1;
 
@@ -52,7 +52,7 @@ class ResultSet implements \Iterator, IRowContainer
 				}
 
 				$this->pdoStatement->setFetchMode(PDO::FETCH_ASSOC);
-				@$this->pdoStatement->execute(); // @ PHP generates warning when ATTR_ERRMODE = ERRMODE_EXCEPTION bug #73878
+				$this->pdoStatement->execute();
 			}
 		} catch (\PDOException $e) {
 			$e = $connection->getDriver()->convertException($e);
