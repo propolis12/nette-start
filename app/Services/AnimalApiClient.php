@@ -74,7 +74,8 @@ class AnimalApiClient
     public function createAnimal(array $data): bool
     {
         try {
-            $response = $this->client->post($this->apiUrl . '/animals', [
+            $url = sprintf('%spet/', $this->apiUrl);
+            $response = $this->client->post($url, [
                 'json' => $data
             ]);
             return $response->getStatusCode() === 201;

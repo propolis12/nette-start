@@ -3,6 +3,7 @@
 namespace App\UI\Animal;
 
 use App\Services\AnimalApiClient;
+use Nette\Application\UI\Form;
 use Nette\Application\UI\Presenter;
 
 class AnimalPresenter extends Presenter
@@ -36,6 +37,23 @@ class AnimalPresenter extends Presenter
 //        echo $animals[0]->getName();
 //        die();
         $this->template->animals = $animals;
+    }
+
+    public function renderCreatePet(): void
+    {
+        $form = new Form; // means Nette\Application\UI\Form
+
+        $form->addText('name', 'Jméno:')
+            ->setRequired();
+
+        $form->addEmail('category', 'E-mail:');
+
+        $form->addTextArea('', 'Komentář:')
+            ->setRequired();
+
+        $form->addSubmit('send', 'Publikovat komentář');
+
+        return $form;
     }
 
 }
