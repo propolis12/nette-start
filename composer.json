@@ -20,7 +20,8 @@
 		"latte/latte": "^3.0",
 		"tracy/tracy": "^2.10",
 		"guzzlehttp/guzzle": "^7.9",
-      "ext-simplexml": "*"
+      "ext-simplexml": "*",
+		"contributte/forms-multiplier": "^4.0"
     },
 	"require-dev": {
 		"nette/tester": "^2.5",

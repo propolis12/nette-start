@@ -3,6 +3,7 @@
 namespace App\UI\Animal;
 
 use App\Services\AnimalApiClient;
+use Contributte\FormMultiplier\Multiplier;
 use Nette\Application\UI\Form;
 use Nette\Application\UI\Presenter;
 
@@ -63,10 +64,19 @@ class AnimalPresenter extends Presenter
         $categoryContainer->addText('name', 'Category Name:')
             ->setRequired();
 
-        $tagContainer = $form->AddContainer('tag');
-        $tagContainer->addText('id', 'Tag Id:');
+//        $tagContainer = $form->AddContainer('tag');
+//        $tagContainer->addText('id', 'Tag Id:');
+//
+//        $tagContainer->addText('name', 'Tag Name:');
 
-        $tagContainer->addText('name', 'Tag Name:');
+        $multiplier = new Multiplier(function (Form $container, int $index) {
+            // Pridanie poľa pre každý tag
+            $container->addText('name', 'Tag Name:')
+                ->setRequired();
+        }, 1); // 1 znamená, že formulár začne s 1 tagom
+
+// Pridanie Multiplier do formulára
+        $form->addComponent($multiplier, 'tags');
 
         $form->addText('imagePath', 'Image path:');
 
