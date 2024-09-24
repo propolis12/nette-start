@@ -57,7 +57,6 @@ class Animal
     public function setStatus(string $status): void
     {
         $this->status = $status;
-        $status = $status;
     }
 
     // Method to return array representation (for XML or API usage)
