@@ -39,21 +39,56 @@ class AnimalPresenter extends Presenter
         $this->template->animals = $animals;
     }
 
-    public function renderCreatePet(): void
+    public function renderCreatePet()
+    {
+
+    }
+
+    public function createComponentCreatePet(): Form
     {
         $form = new Form; // means Nette\Application\UI\Form
 
-        $form->addText('name', 'Jméno:')
+        $form->addText('id', 'Id')
             ->setRequired();
 
-        $form->addEmail('category', 'E-mail:');
-
-        $form->addTextArea('', 'Komentář:')
+        $form->addText('name', 'Meno')
             ->setRequired();
 
-        $form->addSubmit('send', 'Publikovat komentář');
+//        $form->AddText('category', 'Kategoria');
+        $categoryContainer = $form->AddContainer('category');
+
+        $categoryContainer->addText('id', 'Category Id:')
+            ->setRequired();
+
+        $categoryContainer->addText('name', 'Category Name:')
+            ->setRequired();
+
+        $tagContainer = $form->AddContainer('tag');
+        $tagContainer->addText('id', 'Tag Id:');
+
+        $tagContainer->addText('name', 'Tag Name:');
+
+        $form->addText('imagePath', 'Image path:')
+
+        $form->addSelect('status', 'status', [
+            'available' => self::STATUS_AVAILABLE,
+            'pending' => self::STATUS_PENDING,
+            'sold' => self::STATUS_SOLD,
+        ])
+            ->setRequired();
+
+        $form->addSubmit('send', 'Vytvorit zviera');
+//        $form->onSuccess[] = [$this, 'createPetSucceeded'];
+        $form->onSuccess[] = $this->createPetSucceeded(...);
 
         return $form;
     }
 
+    private function createPetSucceeded(Form $form): void
+    {
+        $values = $form->getValues();
+        print_r($values);
+//        die();
+        $this->animalApiClient->createAnimal($values);
+    }
 }

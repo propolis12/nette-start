@@ -14,6 +14,8 @@ class Animal
 
     private string $status;
 
+    private Collection $tags;
+
     public function getId(): int
     {
         return $this->id;
