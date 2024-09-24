@@ -14,7 +14,7 @@ class Animal
 
     private string $status;
 
-    private Collection $tags;
+    private array $tags;
 
     public function getId(): int
     {
@@ -83,4 +83,20 @@ class Animal
             'status' => $this->status,
         ];
     }
+
+    public function addTag(Tag $tag): void
+    {
+        $this->tags[] = $tag;
+    }
+
+    public function removeTag(Tag $tag): void
+    {
+        $this->tags = array_filter($this->tags, fn($t) => $t !== $tag);
+    }
+
+    public function getTags(): array
+    {
+        return $this->tags;
+    }
+
 }

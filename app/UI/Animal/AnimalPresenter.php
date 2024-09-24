@@ -68,7 +68,7 @@ class AnimalPresenter extends Presenter
 
         $tagContainer->addText('name', 'Tag Name:');
 
-        $form->addText('imagePath', 'Image path:')
+        $form->addText('imagePath', 'Image path:');
 
         $form->addSelect('status', 'status', [
             'available' => self::STATUS_AVAILABLE,
