@@ -2,11 +2,19 @@
 <div><a n:href="Home:default">Spat</a></div>
     <div n:foreach="$animals as $animal">
         -----------------------------------------------------------------------
-        <div>ID of animal {$animal->getId()}</div>
+        <div><strong>ID of animal: </strong> {$animal->getId()}</div>
 
-        <div>Name of animal {$animal->getName()}</div>
+        <div><strong>Name of animal:</strong> {$animal->getName()}</div>
 
-        <div>Name of category {$animal->getCategory()->getName()}</div>
+        <div><strong>Name of category:</strong> {$animal->getCategory()->getName()}</div>
 
-        <div>status {$animal->getStatus()}</div>
+        <div><strong>Photo urls:</strong>
+            <div n:foreach="$animal->getPhotoUrls() as $photoUrl">{$photoUrl}</div>
+        </div>
+
+        <div><strong>Tags:</strong>
+        <div n:foreach="$animal->getTags() as $tag">{$tag}</div>
+        </div>
+
+        <div><strong>Status:</strong> {$animal->getStatus()}</div>
     </div>

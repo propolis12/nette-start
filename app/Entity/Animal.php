@@ -10,11 +10,17 @@ class Animal
 
     private Category $category;
 
-    private string $image;
+    private array $photoUrls;
 
     private string $status;
 
     private array $tags;
+
+    public function __construct()
+    {
+        $this->photoUrls = [];
+        $this->tags = [];
+    }
 
     public function getId(): int
     {
@@ -38,9 +44,9 @@ class Animal
         return $this->category;
     }
 
-    public function getImage(): string
+    public function getPhotoUrls(): array
     {
-        return $this->image;
+        return $this->photoUrls;
     }
 
     public function getStatus(): string
@@ -61,9 +67,9 @@ class Animal
         return $this;
     }
 
-    public function setImage(string $image): Animal
+    public function setPhotoUrls(array $photoUrls): Animal
     {
-        $this->image = $image;
+        $this->photoUrls = $photoUrls;
         return $this;
     }
 
@@ -73,13 +79,19 @@ class Animal
         return $this;
     }
 
+    public function addPhotoUrl(string $photoUrl): Animal
+    {
+        $this->photoUrls[] = $photoUrl;
+        return $this;
+    }
+
     // Method to return array representation (for XML or API usage)
     public function toArray(): array
     {
         return [
             'name' => $this->name,
             'category' => $this->category,
-            'image' => $this->image,
+            'image' => $this->photoUrls,
             'status' => $this->status,
         ];
     }

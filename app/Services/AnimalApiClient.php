@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Entity\Animal;
 use App\Entity\Category;
+use App\Entity\Tag;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Nette\Utils\ArrayHash;
@@ -12,6 +13,10 @@ class AnimalApiClient
 {
 
 //    private const API_URL = 'https://petstore3.swagger.io/api/v3/';
+
+    private const ACTION_CREATE = 'create',
+        ACTION_UPDATE = 'update',
+        ACTION_DELETE = 'delete';
     private Client $client;
     private string $apiUrl;
 
@@ -45,11 +50,25 @@ class AnimalApiClient
 
             if (isset($xml->item[0])) {
                 foreach ($xml->item as $item) {
-                    $animals[] = (new Animal())
+                    $animal = (new Animal())
                         ->setId((int) $item->id)
                         ->setStatus($status)
                         ->setCategory((new Category())->setId((int) $item->category->id)->setName($item->category->name))
                         ->setName($item->name);
+
+                    if (!empty($item->tags->tag)) {
+                        foreach ($item->tags->tag as $tag) {
+                            $animal->addTag((new Tag())->setId((int) $tag->id)->setName($tag->name));
+                        }
+                    }
+
+                    if (!empty($item->photoUrls->photoUrl)) {
+                        foreach ($item->photoUrls->photoUrl as $photoUrl) {
+                            $animal->addPhotoUrl($photoUrl);
+                        }
+                        $animals[] = $animal;
+                    }
+
                 }
 
             } else {
@@ -72,15 +91,17 @@ class AnimalApiClient
         }
     }
 
-    public function createAnimal(ArrayHash $data): bool
+    public function createAnimal(ArrayHash $data, $action = 'POST'): bool
     {
         try {
             $url = sprintf('%spet', $this->apiUrl);
-            $response = $this->client->post($url, [
+
+            $response = $this->client->request($action, $url, [
                 'json' => $data
             ]);
-            echo $response->getStatusCode() === 200;
+
             return $response->getStatusCode() === 200;
+
         } catch (RequestException $e) {
             throw new \Exception("API request failed: " . $e->getMessage());
         }

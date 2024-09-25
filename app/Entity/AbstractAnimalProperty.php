@@ -17,4 +17,22 @@ abstract class AbstractAnimalProperty
     {
         return $this->name;
     }
+
+     public function setId(int $id): AbstractAnimalProperty
+     {
+        $this->id = $id;
+        return $this;
+     }
+
+     public function setName(string $name): AbstractAnimalProperty
+     {
+        $this->name = $name;
+        return $this;
+     }
+
+     public function  __toString()
+     {
+         return $this->name;
+     }
+
 }

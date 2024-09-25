@@ -2,24 +2,75 @@
 <animals>
     <animal>
         <name>Lion</name>
-        <category>Big Cat</category>
+        <category>
+            <id>2119402178990303959</id>
+            <name>Big Cat</name>
+        </category>
         <image>lion.png</image>
+        <photoUrls>
+            <photoUrl>lion1.png</photoUrl>
+            <photoUrl>lion2.png</photoUrl>
+        </photoUrls>
         <status>available</status>
         <age>5</age>
+        <tags>
+            <tag>
+                <id>1</id>
+                <name>Predator</name>
+            </tag>
+            <tag>
+                <id>2</id>
+                <name>King</name>
+            </tag>
+        </tags>
     </animal>
 
     <animal>
         <name>Parrot</name>
-        <category>Bird</category>
+        <category>
+            <id>2119402178990303960</id>
+            <name>Bird</name>
+        </category>
         <image>parrot.png</image>
+        <photoUrls>
+            <photoUrl>parrot1.png</photoUrl>
+            <photoUrl>parrot2.png</photoUrl>
+        </photoUrls>
         <status>reserved</status>
         <age>2</age>
+        <tags>
+            <tag>
+                <id>3</id>
+                <name>Colorful</name>
+            </tag>
+            <tag>
+                <id>4</id>
+                <name>Talking</name>
+            </tag>
+        </tags>
     </animal>
 
     <animal>
         <name>Dog</name>
-        <category>Mammal</category>
+        <category>
+            <id>2119402178990303961</id>
+            <name>Mammal</name>
+        </category>
         <image>dog.png</image>
+        <photoUrls>
+            <photoUrl>dog1.png</photoUrl>
+            <photoUrl>dog2.png</photoUrl>
+        </photoUrls>
         <status>sold</status>
+        <tags>
+            <tag>
+                <id>5</id>
+                <name>Loyal</name>
+            </tag>
+            <tag>
+                <id>6</id>
+                <name>Friendly</name>
+            </tag>
+        </tags>
     </animal>
 </animals>

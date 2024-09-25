@@ -6,12 +6,14 @@ use App\Services\AnimalApiClient;
 use Contributte\FormMultiplier\Multiplier;
 use Nette\Application\UI\Form;
 use Nette\Application\UI\Presenter;
+use Nette\Forms\Container;
 
 class AnimalPresenter extends Presenter
 {
     private const STATUS_AVAILABLE = 'available',
                     STATUS_PENDING = 'pending',
                     STATUS_SOLD = 'sold';
+
     private const ANIMAL_STATUSES = [
         self::STATUS_AVAILABLE,
         self::STATUS_PENDING,
@@ -35,8 +37,6 @@ class AnimalPresenter extends Presenter
         }
 
         $animals = $this->animalApiClient->getAllAnimalsByStatus($status);
-//        echo $animals[0]->getName();
-//        die();
         $this->template->animals = $animals;
     }
 
@@ -45,9 +45,14 @@ class AnimalPresenter extends Presenter
 
     }
 
-    public function createComponentCreatePet(): Form
+    public function renderUpdatePet()
     {
-        $form = new Form; // means Nette\Application\UI\Form
+        $this->template->isEdit = true;
+    }
+
+    public function createComponentCreatePet(bool $isEdit = false): Form
+    {
+        $form = new Form;
 
         $form->addText('id', 'Id')
             ->setRequired();
@@ -55,7 +60,6 @@ class AnimalPresenter extends Presenter
         $form->addText('name', 'Meno')
             ->setRequired();
 
-//        $form->AddText('category', 'Kategoria');
         $categoryContainer = $form->AddContainer('category');
 
         $categoryContainer->addText('id', 'Category Id:')
@@ -64,19 +68,9 @@ class AnimalPresenter extends Presenter
         $categoryContainer->addText('name', 'Category Name:')
             ->setRequired();
 
-//        $tagContainer = $form->AddContainer('tag');
-//        $tagContainer->addText('id', 'Tag Id:');
-//
-//        $tagContainer->addText('name', 'Tag Name:');
+        $tagContainer = $form->AddContainer('tag');
 
-        $multiplier = new Multiplier(function (Form $container, int $index) {
-            // Pridanie poľa pre každý tag
-            $container->addText('name', 'Tag Name:')
-                ->setRequired();
-        }, 1); // 1 znamená, že formulár začne s 1 tagom
-
-// Pridanie Multiplier do formulára
-        $form->addComponent($multiplier, 'tags');
+        $tagContainer->addText('name', 'Tag Name:')->setHtmlAttribute('placeholder', 'tagy oddelte ciarkami');
 
         $form->addText('imagePath', 'Image path:');
 
@@ -88,16 +82,20 @@ class AnimalPresenter extends Presenter
             ->setRequired();
 
         $form->addSubmit('send', 'Vytvorit zviera');
-//        $form->onSuccess[] = [$this, 'createPetSucceeded'];
         $form->onSuccess[] = $this->createPetSucceeded(...);
 
         return $form;
     }
 
+    public function createComponentUpdatePet()
+    {
+        return $this->createComponentCreatePet(true);
+    }
+
     private function createPetSucceeded(Form $form): void
     {
         $values = $form->getValues();
-        print_r($values);
+//        print_r($values);
 //        die();
         $this->animalApiClient->createAnimal($values);
     }
