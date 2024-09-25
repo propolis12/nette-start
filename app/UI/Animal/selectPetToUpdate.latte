@@ -1,0 +1,5 @@
+{block content}
+
+<div class="animals">
+    <div n:foreach="$animals as $animal"><a n:href="Animal:updatePet $animal->getId()">id:{$animal->getId()} name: {$animal->getName()}</a>}</div>
+</div>

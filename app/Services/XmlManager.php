@@ -10,7 +10,7 @@ use App\Entity\Tag;
 class XmlManager
 {
 
-    private const FILE_PATH = __DIR__ . '/../Core/Data/animals.xml';
+    private const FILE_PATH = __DIR__ . '/../Data/animals.xml';
 
 
     public function writeToFile(Animal $animal): void
@@ -51,11 +51,11 @@ class XmlManager
 
     }
 
-    public function readFromFile(): array
+    public function readAnimalsFromFile(): array
     {
         $animals = [];
 
-        $currentXmlFile = simplexml_load_string(self::FILE_PATH);
+        $currentXmlFile = simplexml_load_file(self::FILE_PATH);
 
         foreach ($currentXmlFile->animal as $animal) {
             $animalToWrite = (new Animal())

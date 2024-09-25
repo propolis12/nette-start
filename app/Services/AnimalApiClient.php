@@ -91,8 +91,10 @@ class AnimalApiClient
         }
     }
 
-    public function createAnimal(ArrayHash $data, $action = 'POST'): bool
+    public function createAnimal(array $data, $action = 'POST'): bool
     {
+        echo json_encode($data);
+//        die();
         try {
             $url = sprintf('%spet', $this->apiUrl);
 

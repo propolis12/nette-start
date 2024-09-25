@@ -2,6 +2,7 @@ services:
 	- App\Core\RouterFactory::createRouter
 	- GuzzleHttp\Client
 	- App\Services\AnimalApiClient(%apiUrl%)
+	- App\Services\XmlManager
 
 parameters:
     apiUrl: 'https://petstore3.swagger.io/api/v3/'

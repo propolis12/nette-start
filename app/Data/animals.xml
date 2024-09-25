@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <animals>
     <animal>
+        <id>1</id>
         <name>Lion</name>
         <category>
             <id>2119402178990303959</id>
@@ -26,6 +27,7 @@
     </animal>
 
     <animal>
+        <id>2</id>
         <name>Parrot</name>
         <category>
             <id>2119402178990303960</id>
@@ -36,7 +38,7 @@
             <photoUrl>parrot1.png</photoUrl>
             <photoUrl>parrot2.png</photoUrl>
         </photoUrls>
-        <status>reserved</status>
+        <status>available</status>
         <age>2</age>
         <tags>
             <tag>
@@ -51,6 +53,7 @@
     </animal>
 
     <animal>
+        <id>3</id>
         <name>Dog</name>
         <category>
             <id>2119402178990303961</id>
