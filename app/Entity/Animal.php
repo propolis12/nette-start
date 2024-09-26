@@ -111,4 +111,11 @@ class Animal
         return $this->tags;
     }
 
+    public function setTags(array $tags): Animal
+    {
+        $this->tags = $tags;
+        return $this;
+    }
+
+
 }

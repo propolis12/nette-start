@@ -124,8 +124,8 @@ class AnimalApiClient
     public function deleteAnimal(int $id): bool
     {
         try {
-            $response = $this->client->delete($this->apiUrl . '/animals/' . $id);
-            return $response->getStatusCode() === 204;
+            $response = $this->client->delete(sprintf('%spet/%s', $this->apiUrl, $id));
+            return $response->getStatusCode() === 200;
         } catch (RequestException $e) {
             throw new \Exception("API request failed: " . $e->getMessage());
         }

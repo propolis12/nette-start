@@ -1,5 +1,5 @@
 {block content}
-
+<div><a n:href="Home:default">Spat</a></div>
 <div class="animals">
-    <div n:foreach="$animals as $animal"><a n:href="Animal:updatePet $animal->getId()">id:{$animal->getId()} name: {$animal->getName()}</a>}</div>
+    <div n:foreach="$animals as $animal"><a n:href="Animal:{$action} $animal->getId()">id:{$animal->getId()} name: {$animal->getName()}</a>}</div>
 </div>

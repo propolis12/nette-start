@@ -3,6 +3,8 @@
 namespace App\UI\Animal;
 
 use App\Entity\Animal;
+use App\Entity\Category;
+use App\Entity\Tag;
 use App\Services\AnimalApiClient;
 use App\Services\XmlManager;
 use Contributte\FormMultiplier\Multiplier;
@@ -13,8 +15,8 @@ use Nette\Forms\Container;
 class AnimalPresenter extends Presenter
 {
     private const STATUS_AVAILABLE = 'available',
-                    STATUS_PENDING = 'pending',
-                    STATUS_SOLD = 'sold';
+        STATUS_PENDING = 'pending',
+        STATUS_SOLD = 'sold';
 
     private const ANIMAL_STATUSES = [
         self::STATUS_AVAILABLE,
@@ -24,7 +26,7 @@ class AnimalPresenter extends Presenter
 
     public function __construct(
         private readonly AnimalApiClient $animalApiClient,
-        private readonly XmlManager $xmlManager
+        private readonly XmlManager      $xmlManager
     )
     {
         parent::__construct();
@@ -45,14 +47,28 @@ class AnimalPresenter extends Presenter
         $this->template->animals = $animals;
     }
 
+    public function actionCreatePet()
+    {
+    }
+
     public function renderCreatePet()
     {
+    }
+
+    public function renderSelectPetToDelete(): void
+    {
+        $animals = $this->xmlManager->readAnimalsFromFile();
+        $this->template->animals = $animals;
+        $this->template->action = 'deletePet';
+        $this->setView('selectPetToUpdate');
+
     }
 
     public function renderSelectPetToUpdate()
     {
         $animals = $this->xmlManager->readAnimalsFromFile();
         $this->template->animals = $animals;
+        $this->template->action = 'updatePet';
     }
 
     public function renderUpdatePet(int $animalId)
@@ -80,6 +96,21 @@ class AnimalPresenter extends Presenter
         }
 
 
+    }
+
+    public function actionDeletePet(int $animalId): void
+    {
+        try {
+            $success = $this->animalApiClient->deleteAnimal($animalId);
+            if ($success) {
+                $this->flashMessage('Zviera bolo úspešne zmazané.', 'success');
+            } else {
+                $this->flashMessage('Nepodarilo sa zmazať zviera.', 'error');
+            }
+        } catch (\Exception $e) {
+            $this->flashMessage('Nastala chyba pri mazaní zvieraťa: ' . $e->getMessage(), 'error');
+        }
+        $this->redirect('Home:default');
     }
 
     public function createComponentCreatePet(): Form
@@ -145,10 +176,10 @@ class AnimalPresenter extends Presenter
     private function createPetSucceeded(Form $form): void
     {
         $values = (array) $form->getValues();
-//        print_r($values['tags']);
-//        print_r('----------------------------------------------------');
-//        $tags = $values['tags'];
+
+
         $tags = explode(',', $values['tags']['name']);
+        $tagsEntitiesArray = [];
         $values['tags'] = [];
         $counter = 1;
         foreach ($tags as $tag) {
@@ -156,16 +187,30 @@ class AnimalPresenter extends Presenter
                     'id' => $counter, // alebo $tag['id'], ak je to pole
                     'name' => $tag // alebo $tag['name'], ak je to pole
             ];
+            $tagsEntitiesArray[] = (new Tag())->setId($counter)->setName($tag);
             $counter++;
         }
-//        print_r(json_encode($values['tags']));
-//        die();
-//        $values = $form->getValues();
+
+
         $photoUrls = explode(',', $values['photoUrls']);
         $values['photoUrls'] = [];
         foreach ($photoUrls as $photoUrl) {
             $values['photoUrls'][] =  $photoUrl;
         }
-        $this->animalApiClient->createAnimal($values);
+        try {
+            $this->animalApiClient->createAnimal($values);
+        } catch (\Exception $e) {
+            $this->flashMessage('Nepodarilo sa vytvorit zviera.', 'error');
+            return;
+        }
+        $animal = (new Animal())
+            ->setId($values['id'])
+            ->setName($values['name'])
+            ->setCategory((new Category())->setId($values['category']['id'])->setName($values['category']['name']))
+            ->setStatus((string) $values['status'])
+            ->setPhotoUrls($values['photoUrls'])
+            ->setTags($tagsEntitiesArray)
+        ;
+        $this->xmlManager->writeToFile($animal);
     }
 }
