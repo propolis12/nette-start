@@ -17,11 +17,11 @@ class XmlManager
     {
 
         // Načítanie existujúceho XML súboru
-        $xmlFilePath = self::FILE_PATH; // cesta k XML súboru uložená v konštante
-        $xml = simplexml_load_file($xmlFilePath);
+        $xml = simplexml_load_file(self::FILE_PATH);
 
         // Pridanie nového zvieraťa
         $newAnimal = $xml->addChild('animal');
+        $newAnimal->addChild('id',(string) $animal->getId());
         $newAnimal->addChild('name', $animal->getName());
 
         // Pridanie kategórie
@@ -47,7 +47,7 @@ class XmlManager
         }
 
         // Uloženie späť do XML súboru
-        $xml->asXML($xmlFilePath);
+        $xml->asXML(self::FILE_PATH);
 
     }
 
@@ -78,6 +78,44 @@ class XmlManager
         }
 
         return $animals;
+    }
+
+    public function checkIfExists(Animal $animal): bool
+    {
+        $currentXmlFile = simplexml_load_file(self::FILE_PATH);
+        foreach ($currentXmlFile->animal as $animalItem) {
+            if ((int) $animalItem->id === $animal->getId()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function updateExisting(Animal $animal)
+    {
+        $currentXmlFile = simplexml_load_file(self::FILE_PATH);
+        foreach ($currentXmlFile->animal as $animalItem) {
+            if ((int) $animalItem->id === $animal->getId()) {
+                $animalItem->name =  $animal->getName();
+                $animalItem->status = $animal->getStatus();
+                $animalItem->category->id =  $animal->getCategory()->getId();
+                $animalItem->category->name = $animal->getCategory()->getName();
+                unset($animalItem->tags->tag);
+                unset($animalItem->photoUrls->photoUrl);
+                foreach ($animal->getPhotoUrls() as $photoUrl) {
+                    $animalItem->photoUrls->addChild('photoUrl', $photoUrl);
+                }
+
+                foreach ($animal->getTags() as $tag) {
+                    $tagElement = $animalItem->tags->addChild('tag');
+                    $tagElement->addChild('id', (string) $tag->getId());
+                    $tagElement->addChild('name', $tag->getName());
+                }
+            }
+        }
+
+        $currentXmlFile->asXML(self::FILE_PATH);
     }
 
 }

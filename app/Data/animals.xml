@@ -35,21 +35,14 @@
         </category>
         <image>parrot.png</image>
         <photoUrls>
-            <photoUrl>parrot1.png</photoUrl>
-            <photoUrl>parrot2.png</photoUrl>
-        </photoUrls>
+            
+            
+        <photoUrl>parrot1.png</photoUrl><photoUrl>  parrot2.png</photoUrl></photoUrls>
         <status>available</status>
         <age>2</age>
         <tags>
-            <tag>
-                <id>3</id>
-                <name>Colorful</name>
-            </tag>
-            <tag>
-                <id>4</id>
-                <name>Talking</name>
-            </tag>
-        </tags>
+            
+            <tag><id>1</id><name>Talking</name></tag><tag><id>2</id><name>Happy</name></tag><tag><id>3</id><name>Pretty</name></tag></tags>
     </animal>
 
     <animal>
@@ -76,4 +69,4 @@
             </tag>
         </tags>
     </animal>
-</animals>
+<animal><name>bdfbdfb</name><category><id>42</id><name>vvdvdfvd</name></category><status>available</status><photoUrls><photoUrl>dbdfbfdb</photoUrl></photoUrls><tags><tag><id>1</id><name>bdfbdfb</name></tag></tags></animal><animal><id>45</id><name>vvdfvdfb</name><category><id>424</id><name>cvvv</name></category><status>available</status><photoUrls><photoUrl>fgdfgdfg</photoUrl></photoUrls><tags><tag><id>1</id><name>42435</name></tag></tags></animal></animals>

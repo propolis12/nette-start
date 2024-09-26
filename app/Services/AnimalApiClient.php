@@ -14,7 +14,7 @@ class AnimalApiClient
 
 //    private const API_URL = 'https://petstore3.swagger.io/api/v3/';
 
-    private const ACTION_CREATE = 'create',
+    public const ACTION_CREATE = 'create',
         ACTION_UPDATE = 'update',
         ACTION_DELETE = 'delete';
     private Client $client;
@@ -109,10 +109,17 @@ class AnimalApiClient
         }
     }
 
-    public function updateAnimal(int $id, array $data): bool
+    public function updateAnimal(array $data): bool
     {
+        echo json_encode($data);
+        $url = sprintf('%spet', $this->apiUrl);
+
+        $response = $this->client->put($url, [
+            'json' => $data
+        ]);
         try {
-            $response = $this->client->put($this->apiUrl . '/animals/' . $id, [
+            $url = sprintf('%spet', $this->apiUrl);
+            $response = $this->client->put($url, [
                 'json' => $data
             ]);
             return $response->getStatusCode() === 200;

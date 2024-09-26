@@ -79,8 +79,8 @@ class AnimalPresenter extends Presenter
                 $this->template->animal = $animal;
 //                print_r($animal);
                 $this->getComponent('createPet')->setDefaults($animal->toArray());
-                $this->getComponent('createPet')->getComponent('id')->setValue($animal->getId());
-                $this->getComponent('createPet')->getComponent('category')->getComponent('id')->setValue($animal->getCategory()->getId());
+                $this->getComponent('createPet')->getComponent('id')->setValue($animal->getId())->setHtmlAttribute('readonly', 'readonly');
+                $this->getComponent('createPet')->getComponent('category')->getComponent('id')->setValue($animal->getCategory()->getId())->setHtmlAttribute('readonly', 'readonly');
                 $this->getComponent('createPet')->getComponent('category')->getComponent('name')->setValue($animal->getCategory()->getName());
                 $tags = $animal->getTags();
                 foreach ($tags as $tag) {
@@ -91,6 +91,7 @@ class AnimalPresenter extends Presenter
 
 //                $photoUrls = $animal->getPhotoUrls();
                 $this->getComponent('createPet')->getComponent('photoUrls')->setValue(implode(', ', $animal->getPhotoUrls()));
+                $this->getComponent('createPet')->getComponent('action')->setvalue('update');
                 break;
             }
         }
@@ -144,7 +145,8 @@ class AnimalPresenter extends Presenter
         ])
             ->setRequired();
 
-        $form->addSubmit('send', 'Vytvorit zviera');
+        $form->addHidden('action')->setDefaultValue(AnimalApiClient::ACTION_CREATE);
+        $form->addSubmit('send', 'Ulozit');
 
 //        // Predvyplnenie hodnôt, ak $animal nie je null
 //        if ($animal !== null) {
@@ -197,20 +199,50 @@ class AnimalPresenter extends Presenter
         foreach ($photoUrls as $photoUrl) {
             $values['photoUrls'][] =  $photoUrl;
         }
-        try {
-            $this->animalApiClient->createAnimal($values);
-        } catch (\Exception $e) {
-            $this->flashMessage('Nepodarilo sa vytvorit zviera.', 'error');
-            return;
-        }
+//        try {
+//            $this->animalApiClient->createAnimal($values);
+//        } catch (\Exception $e) {
+//            $this->flashMessage('Nepodarilo sa vytvorit zviera.', 'error');
+//            return;
+//        }
         $animal = (new Animal())
             ->setId($values['id'])
             ->setName($values['name'])
             ->setCategory((new Category())->setId($values['category']['id'])->setName($values['category']['name']))
             ->setStatus((string) $values['status'])
             ->setPhotoUrls($values['photoUrls'])
-            ->setTags($tagsEntitiesArray)
-        ;
-        $this->xmlManager->writeToFile($animal);
+            ->setTags($tagsEntitiesArray);
+
+        if ($values['action'] === 'create') {
+//            echo 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+//            die();
+            if ($this->xmlManager->checkIfExists($animal)) {
+//                echo 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+//                die();
+                $this->flashMessage('Zviera so zadanym id uz existuje', 'error');
+                $this->redirect('Animal:createPet');
+            }
+
+            try {
+                unset($values['action']);
+                $this->animalApiClient->createAnimal($values);
+            } catch (\Exception $e) {
+                $this->flashMessage('Nepodarilo sa vytvorit zviera.', 'error');
+                return;
+            }
+            $this->xmlManager->writeToFile($animal);
+
+        } else if ($values['action'] === 'update') {
+            unset($values['action']);
+//            $this->animalApiClient->updateAnimal($values);
+
+            try {
+                $this->animalApiClient->updateAnimal($values);
+            } catch (\Exception $e) {
+                $this->flashMessage('Nepodarilo sa updatnut zviera.', 'error');
+                return;
+            }
+            $this->xmlManager->updateExisting($animal);
+        }
     }
 }
