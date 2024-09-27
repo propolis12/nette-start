@@ -3,4 +3,18 @@
 <div><a class="back-link" n:href="Home:default">Spat</a></div>
 <h2>Upravte zviera</h2>
 
+<!-- Zobrazenie aktuálnych obrázkov -->
+<div class="current-images">
+    {if isset($photoUrls) && count($photoUrls) > 0}
+        {foreach $photoUrls as $url}
+            <div class="image-wrapper">
+                <img src="{$url}" alt="Obrázok zvieraťa" style="max-width: 150px; max-height: 150px;">
+            </div>
+        {/foreach}
+    {else}
+        <p>Žiadne obrázky k dispozícii</p>
+    {/if}
+</div>
+
 {control createPet}
+

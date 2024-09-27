@@ -60,6 +60,24 @@
 		.animal-card a:hover {
 			color: #007BFF;
 		}
+
+		.animal-image img {
+			max-width: 100%; /* Zabezpečí, že obrázok nepresiahne šírku kontajnera */
+			max-height: 150px; /* Nastav výšku, aby obrázok nebol príliš vysoký */
+			object-fit: cover; /* Prispôsobí obrázok tak, aby sa zmestil do kontajnera bez deformácie */
+			border-radius: 10px; /* Ak chceš zaobliť rohy obrázka */
+		}
+
+		.current-images {
+			display: flex;
+			gap: 10px;
+			margin-bottom: 20px;
+		}
+
+		.image-wrapper img {
+			border-radius: 5px;
+			border: 1px solid #ccc;
+		}
 	</style>
 </head>
 

@@ -8,6 +8,14 @@
                 id: {$animal->getId()} <br>
                 name: {$animal->getName()}
             </a>
+            <div class="animal-image" style="max-width: 100%">
+                {if count($animal->getPhotoUrls()) > 0}
+                    <img src="{$animal->getPhotoUrls()[0]}" alt="animal image">
+                {else}
+                    <p>No image available</p>
+                {/if}
+            </div>
         </div>
+
     </div>
 {/block}

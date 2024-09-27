@@ -71,7 +71,7 @@ class AnimalPresenter extends Presenter
         $this->template->action = 'updatePet';
     }
 
-    public function renderUpdatePet(int $animalId)
+    public function actionUpdatePet(int $animalId)
     {
         $animals = $this->xmlManager->readAnimalsFromFile();
         foreach ($animals as $animal) {
@@ -89,14 +89,25 @@ class AnimalPresenter extends Presenter
                 $tagsString = implode(',', $names);
                 $this->getComponent('createPet')->getComponent('tags')->getComponent('name')->setValue($tagsString);
 
+                $this->getComponent('createPet')->addCheckbox('removePhotoUrls', 'vymazat aktualne obrazky');;
+
 //                $photoUrls = $animal->getPhotoUrls();
                 $this->getComponent('createPet')->getComponent('photoUrls')->setValue(implode(', ', $animal->getPhotoUrls()));
 //                $this->getComponent('createPet')->getComponent('action')->setvalue('update');
+//                $this->animal = $animal;
+
                 break;
             }
         }
 
 
+    }
+
+    public function renderUpdatePet(int $animalId)
+    {
+        $animal = $this->xmlManager->getAnimalById($animalId);
+        $this->template->photoUrls = $animal->getPhotoUrls();
+//        $this->template->animal = $this->animal;
     }
 
     public function actionDeletePet(int $animalId): void
@@ -139,7 +150,12 @@ class AnimalPresenter extends Presenter
 
         $tagContainer->addText('name', 'Tag Name:')->setHtmlAttribute('placeholder', 'tagy oddelte ciarkami');
 
-        $form->addText('photoUrls', 'Photo Urls');
+//        $form->addText('photoUrls', 'Photo Urls')->setHtmlAttribute('placeholder', 'urls oddelte ciarkami');
+
+        $form->addUpload('photoUrls', 'Nahrávanie obrázkov')
+            ->setHtmlAttribute('multiple', 'multiple') // Povolenie nahrávať viacero súborov
+            ->addRule(Form::Image, 'Môžete nahrať iba obrázky.')
+            ->addRule(Form::MaxFileSize, 'Maximálna veľkosť súboru je 2 MB', 2 * 1024 * 1024);
 
         $form->addSelect('status', 'status', [
             'available' => self::STATUS_AVAILABLE,
@@ -147,6 +163,7 @@ class AnimalPresenter extends Presenter
             'sold' => self::STATUS_SOLD,
         ])
             ->setRequired();
+        $form->getElementPrototype()->enctype = 'multipart/form-data';
 
         $form->addSubmit('send', 'Ulozit');
 
@@ -162,8 +179,9 @@ class AnimalPresenter extends Presenter
 
     private function createPetSucceeded(Form $form): void
     {
+        print_r($form->getValues());
         $values = (array) $form->getValues();
-
+//        die();
         $tags = explode(',', $values['tags']['name']);
         $tagsEntitiesArray = [];
         $values['tags'] = [];
@@ -178,11 +196,36 @@ class AnimalPresenter extends Presenter
             $counter++;
         }
 
-        $photoUrls = explode(',', $values['photoUrls']);
-        $values['photoUrls'] = [];
-        foreach ($photoUrls as $photoUrl) {
-            $values['photoUrls'][] =  $photoUrl;
+//        $photoUrls = explode(',', $values['photoUrls']);
+//        $photoUrls = [];
+//        $values['photoUrls'] = [];
+
+        $photoUrlsToSend = [];
+        foreach ($values['photoUrls'] as $photoUrl) {
+            if ($photoUrl->isOk() && $photoUrl->isImage()) {
+                $uploadDir = __DIR__;
+//                echo $uploadDir;
+//                die();
+                $uploadDir = __DIR__ . '/../../../www/images/';
+//                echo $uploadDir;
+//                die();
+                $fileName = $photoUrl->getName();
+
+                $filePath = $uploadDir . $fileName;
+
+//                echo $filePath;
+                $photoUrl->move($filePath);
+//                $values['photoUrls'][] =  '/images/' . $fileName;
+                $photoUrlsToSend[] = '/images/' . $fileName;
+            }
+
         }
+        $values['photoUrls'] = $photoUrlsToSend;
+
+        if (isset($values['removePhotoUrls']) && $values['removePhotoUrls']) {
+            $values['photoUrls'] = [];
+        }
+
 
         $animal = (new Animal())
             ->setName($values['name'])
@@ -197,6 +240,7 @@ class AnimalPresenter extends Presenter
             $animal->setId($lowestAvailableId);
             $values['id'] = $lowestAvailableId;
             try {
+                print_r($values);
                 $this->animalApiClient->createAnimal($values);
             } catch (\Exception $e) {
                 $this->flashMessage('Nepodarilo sa vytvorit zviera.', 'error');

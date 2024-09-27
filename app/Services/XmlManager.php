@@ -61,21 +61,7 @@ class XmlManager
         $currentXmlFile = $this->loadFile();
 
         foreach ($currentXmlFile->animal as $animal) {
-            $animalToWrite = (new Animal())
-                        ->setId((int) $animal->id)
-                        ->setName((string) $animal->name)
-                        ->setStatus((string) $animal->status)
-                        ->setCategory((new Category())->setId((int) $animal->category->id)->setName((string) $animal->category->name));
-            $tags = [];
-            $photoUrls = [];
-            foreach ($animal->tags->tag as $tag) {
-                $animalToWrite->addTag((new Tag())->setId((int) $tag->id)->setName((string) $tag->name));
-            }
-
-            foreach ($animal->photoUrls->photoUrl as $photoUrl) {
-                $photoUrls[] = $photoUrl;
-            }
-            $animalToWrite->setPhotoUrls($photoUrls);
+            $animalToWrite = $this->getAnimalById((int) $animal->id);
             $animals[] = $animalToWrite;
         }
 
@@ -162,6 +148,31 @@ class XmlManager
         }
 
         return $counter;
+    }
+
+    public function getAnimalById(int $id): ?Animal
+    {
+        $currentXmlFile = $this->loadFile();
+        foreach ($currentXmlFile->animal as $animal) {
+            if ((int) $animal->id === $id) {
+                $animalToReturn = (new Animal())
+                    ->setId((int) $animal->id)
+                    ->setName((string) $animal->name)
+                    ->setStatus((string) $animal->status)
+                    ->setCategory((new Category())->setId((int) $animal->category->id)->setName((string) $animal->category->name));
+                $photoUrls = [];
+                foreach ($animal->tags->tag as $tag) {
+                    $animalToReturn->addTag((new Tag())->setId((int) $tag->id)->setName((string) $tag->name));
+                }
+
+                foreach ($animal->photoUrls->photoUrl as $photoUrl) {
+                    $photoUrls[] = $photoUrl;
+                }
+                $animalToReturn->setPhotoUrls($photoUrls);
+                return $animalToReturn;
+            }
+        }
+        return null;
     }
 
 }
