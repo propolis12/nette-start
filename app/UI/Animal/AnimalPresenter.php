@@ -77,9 +77,9 @@ class AnimalPresenter extends Presenter
         foreach ($animals as $animal) {
             if ($animal->getId() === $animalId) {
                 $this->template->animal = $animal;
-//                print_r($animal);
+
                 $this->getComponent('createPet')->setDefaults($animal->toArray());
-                $this->getComponent('createPet')->getComponent('id')->setValue($animal->getId())->setHtmlAttribute('readonly', 'readonly');
+                $this->getComponent('createPet')->getComponent('id')->setValue($animal->getId());
                 $this->getComponent('createPet')->getComponent('category')->getComponent('id')->setValue($animal->getCategory()->getId())->setHtmlAttribute('readonly', 'readonly');
                 $this->getComponent('createPet')->getComponent('category')->getComponent('name')->setValue($animal->getCategory()->getName());
                 $tags = $animal->getTags();
@@ -91,7 +91,7 @@ class AnimalPresenter extends Presenter
 
 //                $photoUrls = $animal->getPhotoUrls();
                 $this->getComponent('createPet')->getComponent('photoUrls')->setValue(implode(', ', $animal->getPhotoUrls()));
-                $this->getComponent('createPet')->getComponent('action')->setvalue('update');
+//                $this->getComponent('createPet')->getComponent('action')->setvalue('update');
                 break;
             }
         }
@@ -103,6 +103,9 @@ class AnimalPresenter extends Presenter
     {
         try {
             $success = $this->animalApiClient->deleteAnimal($animalId);
+            if ($success) {
+                $this->xmlManager->deletePet($animalId);
+            }
             if ($success) {
                 $this->flashMessage('Zviera bolo úspešne zmazané.', 'success');
             } else {
@@ -116,10 +119,10 @@ class AnimalPresenter extends Presenter
 
     public function createComponentCreatePet(): Form
     {
+
         $form = new Form;
 
-        $form->addText('id', 'Id')
-            ->setRequired();
+        $form->addHidden('id', AnimalApiClient::ACTION_CREATE);
 
         $form->addText('name', 'Meno')
             ->setRequired();
@@ -145,25 +148,8 @@ class AnimalPresenter extends Presenter
         ])
             ->setRequired();
 
-        $form->addHidden('action')->setDefaultValue(AnimalApiClient::ACTION_CREATE);
         $form->addSubmit('send', 'Ulozit');
 
-//        // Predvyplnenie hodnôt, ak $animal nie je null
-//        if ($animal !== null) {
-//            $form->setDefaults([
-//                'id' => $animal->getId(),
-//                'name' => $animal->getName(),
-//                'category' => [
-//                    'id' => $animal->getCategory()->getId(),
-//                    'name' => $animal->getCategory()->getName(),
-//                ],
-//                'tag' => [
-//                    'name' => implode(', ', $animal->getTags()), // Ak tagy prichádzajú ako pole
-//                ],
-//                'imagePath' => implode(', ', $animal->getPhotoUrls()),
-//                'status' => $animal->getStatus(),
-//            ]);
-//        }
         $form->onSuccess[] = $this->createPetSucceeded(...);
 
         return $form;
@@ -171,7 +157,6 @@ class AnimalPresenter extends Presenter
 
     public function createComponentUpdatePet(): Form
     {
-        $this->getParameter('id');
         return $this->createComponentCreatePet();
     }
 
@@ -179,52 +164,39 @@ class AnimalPresenter extends Presenter
     {
         $values = (array) $form->getValues();
 
-
         $tags = explode(',', $values['tags']['name']);
         $tagsEntitiesArray = [];
         $values['tags'] = [];
         $counter = 1;
+
         foreach ($tags as $tag) {
-            $values['tags'][] =  [ // obalenie do 'tag'
-                    'id' => $counter, // alebo $tag['id'], ak je to pole
-                    'name' => $tag // alebo $tag['name'], ak je to pole
+            $values['tags'][] =  [
+                    'id' => $counter,
+                    'name' => $tag
             ];
             $tagsEntitiesArray[] = (new Tag())->setId($counter)->setName($tag);
             $counter++;
         }
-
 
         $photoUrls = explode(',', $values['photoUrls']);
         $values['photoUrls'] = [];
         foreach ($photoUrls as $photoUrl) {
             $values['photoUrls'][] =  $photoUrl;
         }
-//        try {
-//            $this->animalApiClient->createAnimal($values);
-//        } catch (\Exception $e) {
-//            $this->flashMessage('Nepodarilo sa vytvorit zviera.', 'error');
-//            return;
-//        }
+
         $animal = (new Animal())
-            ->setId($values['id'])
             ->setName($values['name'])
-            ->setCategory((new Category())->setId($values['category']['id'])->setName($values['category']['name']))
+            ->setCategory((new Category())->setId((int) $values['category']['id'])->setName($values['category']['name']))
             ->setStatus((string) $values['status'])
             ->setPhotoUrls($values['photoUrls'])
             ->setTags($tagsEntitiesArray);
 
-        if ($values['action'] === 'create') {
-//            echo 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-//            die();
-            if ($this->xmlManager->checkIfExists($animal)) {
-//                echo 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-//                die();
-                $this->flashMessage('Zviera so zadanym id uz existuje', 'error');
-                $this->redirect('Animal:createPet');
-            }
+        if ($values['id'] === AnimalApiClient::ACTION_CREATE) {
 
+            $lowestAvailableId = $this->xmlManager->getLowestAvailableId();
+            $animal->setId($lowestAvailableId);
+            $values['id'] = $lowestAvailableId;
             try {
-                unset($values['action']);
                 $this->animalApiClient->createAnimal($values);
             } catch (\Exception $e) {
                 $this->flashMessage('Nepodarilo sa vytvorit zviera.', 'error');
@@ -232,17 +204,17 @@ class AnimalPresenter extends Presenter
             }
             $this->xmlManager->writeToFile($animal);
 
-        } else if ($values['action'] === 'update') {
-            unset($values['action']);
-//            $this->animalApiClient->updateAnimal($values);
-
+        } else {
+                $animal->setId($values['id']);
             try {
                 $this->animalApiClient->updateAnimal($values);
             } catch (\Exception $e) {
                 $this->flashMessage('Nepodarilo sa updatnut zviera.', 'error');
                 return;
             }
+
             $this->xmlManager->updateExisting($animal);
         }
     }
+
 }

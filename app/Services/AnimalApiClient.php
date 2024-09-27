@@ -117,6 +117,7 @@ class AnimalApiClient
         $response = $this->client->put($url, [
             'json' => $data
         ]);
+        echo $response->getBody()->getContents();
         try {
             $url = sprintf('%spet', $this->apiUrl);
             $response = $this->client->put($url, [

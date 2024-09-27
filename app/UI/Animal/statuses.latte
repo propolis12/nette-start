@@ -1,4 +1,6 @@
 {block content}
+
+<div><a class="back-link" n:href="Home:default">Späť</a></div>
 <ul n:foreach="$statuses as $status" class="statuses">
         <li><a n:href="Animal:animalsByStatus $status">{$status}</a></li>
 </ul>

@@ -21,7 +21,8 @@
 		"tracy/tracy": "^2.10",
 		"guzzlehttp/guzzle": "^7.9",
       "ext-simplexml": "*",
-		"contributte/forms-multiplier": "^4.0"
+		"contributte/forms-multiplier": "^4.0",
+      "ext-dom": "*"
     },
 	"require-dev": {
 		"nette/tester": "^2.5",

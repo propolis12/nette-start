@@ -6,39 +6,43 @@ namespace App\Services;
 use App\Entity\Animal;
 use App\Entity\Category;
 use App\Entity\Tag;
+use SimpleXMLElement;
 
 class XmlManager
 {
 
     private const FILE_PATH = __DIR__ . '/../Data/animals.xml';
+    private const COUNTER_ID_STARTING_POINT = 1;
 
+    public function loadFile(): SimpleXMLElement
+    {
+        $xml = @simplexml_load_file(self::FILE_PATH);
+        if ($xml === false) {
+            $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><animals></animals>');
+        }
+        return $xml;
+    }
 
     public function writeToFile(Animal $animal): void
     {
 
-        // Načítanie existujúceho XML súboru
-        $xml = simplexml_load_file(self::FILE_PATH);
+        $xml = $this->loadFile();
 
-        // Pridanie nového zvieraťa
         $newAnimal = $xml->addChild('animal');
         $newAnimal->addChild('id',(string) $animal->getId());
         $newAnimal->addChild('name', $animal->getName());
 
-        // Pridanie kategórie
         $category = $newAnimal->addChild('category');
         $category->addChild('id', (string)$animal->getCategory()->getId()); // predpokladám, že Category je objekt
         $category->addChild('name', $animal->getCategory()->getName());
 
-        // Pridanie ďalších elementov
         $newAnimal->addChild('status', $animal->getStatus());
 
-        // Pridanie URL pre fotky
         $photos = $newAnimal->addChild('photoUrls');
         foreach ($animal->getPhotoUrls() as $photoUrl) {
             $photos->addChild('photoUrl', $photoUrl);
         }
 
-        // Pridanie tagov
         $tags = $newAnimal->addChild('tags');
         foreach ($animal->getTags() as $tag) {
             $tagElement = $tags->addChild('tag');
@@ -46,7 +50,6 @@ class XmlManager
             $tagElement->addChild('name', $tag->getName());
         }
 
-        // Uloženie späť do XML súboru
         $xml->asXML(self::FILE_PATH);
 
     }
@@ -55,7 +58,7 @@ class XmlManager
     {
         $animals = [];
 
-        $currentXmlFile = simplexml_load_file(self::FILE_PATH);
+        $currentXmlFile = $this->loadFile();
 
         foreach ($currentXmlFile->animal as $animal) {
             $animalToWrite = (new Animal())
@@ -66,7 +69,6 @@ class XmlManager
             $tags = [];
             $photoUrls = [];
             foreach ($animal->tags->tag as $tag) {
-//                $tags[] = (new Tag())->setId((int) $tag->id)->setName((string) $tag->name);
                 $animalToWrite->addTag((new Tag())->setId((int) $tag->id)->setName((string) $tag->name));
             }
 
@@ -82,7 +84,7 @@ class XmlManager
 
     public function checkIfExists(Animal $animal): bool
     {
-        $currentXmlFile = simplexml_load_file(self::FILE_PATH);
+        $currentXmlFile = $this->loadFile();
         foreach ($currentXmlFile->animal as $animalItem) {
             if ((int) $animalItem->id === $animal->getId()) {
                 return true;
@@ -94,15 +96,18 @@ class XmlManager
 
     public function updateExisting(Animal $animal)
     {
-        $currentXmlFile = simplexml_load_file(self::FILE_PATH);
+        $currentXmlFile = $this->loadFile();
         foreach ($currentXmlFile->animal as $animalItem) {
+
             if ((int) $animalItem->id === $animal->getId()) {
                 $animalItem->name =  $animal->getName();
                 $animalItem->status = $animal->getStatus();
                 $animalItem->category->id =  $animal->getCategory()->getId();
                 $animalItem->category->name = $animal->getCategory()->getName();
+
                 unset($animalItem->tags->tag);
                 unset($animalItem->photoUrls->photoUrl);
+
                 foreach ($animal->getPhotoUrls() as $photoUrl) {
                     $animalItem->photoUrls->addChild('photoUrl', $photoUrl);
                 }
@@ -116,6 +121,47 @@ class XmlManager
         }
 
         $currentXmlFile->asXML(self::FILE_PATH);
+    }
+
+    public function deletePet(int $animalId): void
+    {
+        $currentXmlFile = $this->loadFile();
+
+        $dom = dom_import_simplexml($currentXmlFile)->ownerDocument;
+
+        foreach ($currentXmlFile->animal as $animal) {
+            if ((int) $animal->id === $animalId) {
+                $animalDom = dom_import_simplexml($animal);
+                $animalDom->parentNode->removeChild($animalDom);
+                break;
+            }
+        }
+
+        $dom->save(self::FILE_PATH);
+
+        $currentXmlFile->asXML(self::FILE_PATH);
+    }
+
+    public function getLowestAvailableId(): int
+    {
+        $currentXmlFile = $this->loadFile();
+        $ids = [];
+        foreach ($currentXmlFile->animal as $animal) {
+            $ids[] = (int) $animal->id;
+        }
+
+        sort($ids);
+        $counter = self::COUNTER_ID_STARTING_POINT;
+
+        if (empty($ids)) {
+            return self::COUNTER_ID_STARTING_POINT;
+        }
+
+        while (in_array($counter, $ids)) {
+            $counter++;
+        }
+
+        return $counter;
     }
 
 }
