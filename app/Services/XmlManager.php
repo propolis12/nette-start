@@ -166,7 +166,7 @@ class XmlManager
                 }
 
                 foreach ($animal->photoUrls->photoUrl as $photoUrl) {
-                    $photoUrls[] = $photoUrl;
+                    $photoUrls[] = (string) $photoUrl;
                 }
                 $animalToReturn->setPhotoUrls($photoUrls);
                 return $animalToReturn;

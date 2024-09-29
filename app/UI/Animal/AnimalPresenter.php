@@ -6,6 +6,7 @@ use App\Entity\Animal;
 use App\Entity\Category;
 use App\Entity\Tag;
 use App\Services\AnimalApiClient;
+use App\Services\AnimalService;
 use App\Services\XmlManager;
 use Contributte\FormMultiplier\Multiplier;
 use Nette\Application\UI\Form;
@@ -26,7 +27,8 @@ class AnimalPresenter extends Presenter
 
     public function __construct(
         private readonly AnimalApiClient $animalApiClient,
-        private readonly XmlManager      $xmlManager
+        private readonly XmlManager      $xmlManager,
+        private readonly AnimalService $animalService
     )
     {
         parent::__construct();
@@ -91,10 +93,7 @@ class AnimalPresenter extends Presenter
 
                 $this->getComponent('createPet')->addCheckbox('removePhotoUrls', 'vymazat aktualne obrazky');;
 
-//                $photoUrls = $animal->getPhotoUrls();
                 $this->getComponent('createPet')->getComponent('photoUrls')->setValue(implode(', ', $animal->getPhotoUrls()));
-//                $this->getComponent('createPet')->getComponent('action')->setvalue('update');
-//                $this->animal = $animal;
 
                 break;
             }
@@ -116,6 +115,7 @@ class AnimalPresenter extends Presenter
             $success = $this->animalApiClient->deleteAnimal($animalId);
             if ($success) {
                 $this->xmlManager->deletePet($animalId);
+//                doplnit validacie na formular
             }
             if ($success) {
                 $this->flashMessage('Zviera bolo úspešne zmazané.', 'success');
@@ -141,7 +141,7 @@ class AnimalPresenter extends Presenter
         $categoryContainer = $form->AddContainer('category');
 
         $categoryContainer->addText('id', 'Category Id:')
-            ->setRequired();
+            ->setRequired()->addRule(Form::Integer, 'zadajte cele cislo')->addRule(Form::Range, 'Cislo musi byt nezaporne', [0, null]);
 
         $categoryContainer->addText('name', 'Category Name:')
             ->setRequired();
@@ -149,8 +149,6 @@ class AnimalPresenter extends Presenter
         $tagContainer = $form->AddContainer('tags');
 
         $tagContainer->addText('name', 'Tag Name:')->setHtmlAttribute('placeholder', 'tagy oddelte ciarkami');
-
-//        $form->addText('photoUrls', 'Photo Urls')->setHtmlAttribute('placeholder', 'urls oddelte ciarkami');
 
         $form->addUpload('photoUrls', 'Nahrávanie obrázkov')
             ->setHtmlAttribute('multiple', 'multiple') // Povolenie nahrávať viacero súborov
@@ -179,54 +177,25 @@ class AnimalPresenter extends Presenter
 
     private function createPetSucceeded(Form $form): void
     {
-        print_r($form->getValues());
         $values = (array) $form->getValues();
-//        die();
         $tags = explode(',', $values['tags']['name']);
-        $tagsEntitiesArray = [];
-        $values['tags'] = [];
-        $counter = 1;
+        $tagsEntitiesArray = $this->animalService->processTags($tags)['tagsEntitiesArray'];
+        $values['tags'] = $this->animalService->processTags($tags)['tagsForValues'];
 
-        foreach ($tags as $tag) {
-            $values['tags'][] =  [
-                    'id' => $counter,
-                    'name' => $tag
-            ];
-            $tagsEntitiesArray[] = (new Tag())->setId($counter)->setName($tag);
-            $counter++;
-        }
 
-//        $photoUrls = explode(',', $values['photoUrls']);
-//        $photoUrls = [];
-//        $values['photoUrls'] = [];
+        if (isset($values['removePhotoUrls']) && $values['removePhotoUrls'] === true) {
 
-        $photoUrlsToSend = [];
-        foreach ($values['photoUrls'] as $photoUrl) {
-            if ($photoUrl->isOk() && $photoUrl->isImage()) {
-                $uploadDir = __DIR__;
-//                echo $uploadDir;
-//                die();
-                $uploadDir = __DIR__ . '/../../../www/images/';
-//                echo $uploadDir;
-//                die();
-                $fileName = $photoUrl->getName();
-
-                $filePath = $uploadDir . $fileName;
-
-//                echo $filePath;
-                $photoUrl->move($filePath);
-//                $values['photoUrls'][] =  '/images/' . $fileName;
-                $photoUrlsToSend[] = '/images/' . $fileName;
+            $undeletedFiles = $this->animalService->deleteImages($values['id']);
+            if (count($undeletedFiles) > 0) {
+                $this->flashMessage(sprintf( 'Tieto subory sa nepodarilo zmazat %s', implode(', ', $undeletedFiles)), 'warning');
             }
-
-        }
-        $values['photoUrls'] = $photoUrlsToSend;
-
-        if (isset($values['removePhotoUrls']) && $values['removePhotoUrls']) {
             $values['photoUrls'] = [];
+
+        } else {
+            $values['photoUrls'] = $this->animalService->processPhotoUrls($values['photoUrls']);
         }
 
-
+        print_r($values['photoUrls']);
         $animal = (new Animal())
             ->setName($values['name'])
             ->setCategory((new Category())->setId((int) $values['category']['id'])->setName($values['category']['name']))
@@ -250,10 +219,18 @@ class AnimalPresenter extends Presenter
 
         } else {
                 $animal->setId($values['id']);
+
             try {
+
+//                $removePhotoUrls = $values['removePhotoUrls'];  // Uchováš hodnotu removePhotoUrls
+//                unset($values['removePhotoUrls']);  // Dočasne odstrániš removePhotoUrls
+
                 $this->animalApiClient->updateAnimal($values);
+
+//                $values['removePhotoUrls'] = $removePhotoUrls;
+
             } catch (\Exception $e) {
-                $this->flashMessage('Nepodarilo sa updatnut zviera.', 'error');
+                $this->flashMessage($e->getMessage(), 'error');
                 return;
             }
 

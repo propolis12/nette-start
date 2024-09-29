@@ -3,9 +3,11 @@ services:
 	- GuzzleHttp\Client
 	- App\Services\AnimalApiClient(%apiUrl%)
 	- App\Services\XmlManager
+	- App\Services\AnimalService(%wwwDir%)
 
 parameters:
     apiUrl: 'https://petstore3.swagger.io/api/v3/'
+    wwwDir: %appDir%/../www
 
 search:
 	-	in: %appDir%
