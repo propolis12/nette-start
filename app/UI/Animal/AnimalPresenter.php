@@ -73,7 +73,7 @@ class AnimalPresenter extends Presenter
         $this->template->action = 'updatePet';
     }
 
-    public function actionUpdatePet(int $animalId)
+    public function renderUpdatePet(int $animalId)
     {
         $animals = $this->xmlManager->readAnimalsFromFile();
         foreach ($animals as $animal) {
@@ -98,22 +98,23 @@ class AnimalPresenter extends Presenter
                 break;
             }
         }
+        $this->template->animal = $animal;
 
 
     }
 
-    public function renderUpdatePet(int $animalId)
-    {
-        $animal = $this->xmlManager->getAnimalById($animalId);
-        $this->template->photoUrls = $animal->getPhotoUrls();
-    }
 
     public function actionDeletePet(int $animalId): void
     {
         try {
             $success = $this->animalApiClient->deleteAnimal($animalId);
             if ($success) {
+                $animal = $this->xmlManager->getAnimalById($animalId);
+                $undeletedFiles = $this->animalService->deleteImages($animal);
                 $this->xmlManager->deletePet($animalId);
+                if (count($undeletedFiles) > 0) {
+                    $this->flashMessage(sprintf( 'Tieto subory sa nepodarilo zmazat %s', implode(', ', $undeletedFiles)), 'warning');
+                }
                 $this->flashMessage('Zviera bolo úspešne zmazané.', 'success');
             } else {
                 $this->flashMessage('Nepodarilo sa zmazať zviera.', 'error');
@@ -173,42 +174,32 @@ class AnimalPresenter extends Presenter
 
     private function createPetSucceeded(Form $form): void
     {
+//        if ($form->hasErrors()) {
+//            dump($form->getErrors());  // Vypíše chyby vo formulári
+//        }
         $values = (array) $form->getValues();
+        print_r($values);
         $tags = explode(',', $values['tags']['name']);
+        print_r($values);
+//        die();
         $tags = array_filter($tags, fn($tag) => trim($tag) !== '');
-        $tagsEntitiesArray = $this->animalService->processTags($tags)['tagsEntitiesArray'];
-        $values['tags'] = $this->animalService->processTags($tags)['tagsForValues'];
+        $tagsEntitiesArray = $this->animalService->processTags($tags);
 
 
-        if (isset($values['removePhotoUrls']) && $values['removePhotoUrls'] === true) {
-
-            $undeletedFiles = $this->animalService->deleteImages($values['id']);
-            if (count($undeletedFiles) > 0) {
-                $this->flashMessage(sprintf( 'Tieto subory sa nepodarilo zmazat %s', implode(', ', $undeletedFiles)), 'warning');
-            }
-            $values['photoUrls'] = [];
-
-        } else {
-            $values['photoUrls'] = $this->animalService->processPhotoUrls($values['photoUrls']);
-        }
-
-        print_r($values['photoUrls']);
         $animal = (new Animal())
             ->setName($values['name'])
             ->setCategory((new Category())->setId((int) $values['category']['id'])->setName($values['category']['name']))
             ->setStatus((string) $values['status'])
-            ->setPhotoUrls($values['photoUrls'])
             ->setTags($tagsEntitiesArray);
-
 
 //        ak sa zviera vytvara
         if ($values['id'] === AnimalApiClient::ACTION_CREATE) {
 
+            $animal->setPhotoUrls($this->animalService->processPhotoUrls($values['photoUrls']));
             $lowestAvailableId = $this->xmlManager->getLowestAvailableId();
             $animal->setId($lowestAvailableId);
-            $values['id'] = $lowestAvailableId;
             try {
-                print_r($values);
+                print_r($animal);
                 $this->animalApiClient->createAnimal($animal);
             } catch (\Exception $e) {
                 $this->flashMessage('Nepodarilo sa vytvorit zviera.', 'error');
@@ -219,6 +210,19 @@ class AnimalPresenter extends Presenter
 //            ak sa zviera updatuje
         } else {
                 $animal->setId($values['id']);
+            $currentStoredAnimal = $this->xmlManager->getAnimalById($animal->getId());
+
+            if (isset($values['removePhotoUrls']) && $values['removePhotoUrls'] === true) {
+
+                $undeletedFiles = $this->animalService->deleteImages($currentStoredAnimal);
+                if (count($undeletedFiles) > 0) {
+                    $this->flashMessage(sprintf( 'Tieto subory sa nepodarilo zmazat %s', implode(', ', $undeletedFiles)), 'warning');
+                }
+
+            } else {
+                print_r($currentStoredAnimal->getPhotoUrls());
+                $animal->setPhotoUrls(array_merge($currentStoredAnimal->getPhotoUrls(), $this->animalService->processPhotoUrls($values['photoUrls'])));
+            }
 
             try {
 

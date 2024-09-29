@@ -1,12 +1,12 @@
 {block content}
 
 <div><a class="back-link" n:href="Home:default">Spat</a></div>
-<h2>Upravte zviera</h2>
+<h2>Upravte zviera {$animal->getId()}</h2>
 
 <!-- Zobrazenie aktuálnych obrázkov -->
 <div class="current-images">
-    {if isset($photoUrls) && count($photoUrls) > 0}
-        {foreach $photoUrls as $url}
+    {if isset($animal) && count($animal->getPhotoUrls()) > 0}
+        {foreach $animal->getPhotoUrls() as $url}
             <div class="image-wrapper">
                 <img src="{$url}" alt="Obrázok zvieraťa" style="max-width: 150px; max-height: 150px;">
             </div>

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Entity\Animal;
 use App\Entity\Tag;
 
 class AnimalService
@@ -18,7 +19,6 @@ class AnimalService
     public function processTags(array $tags): array
     {
         $tagsEntitiesArray = [];
-        $tagsForValues = [];
         $counter = 1;
 
         foreach ($tags as $tag) {
@@ -26,19 +26,11 @@ class AnimalService
             $tagsEntitiesArray[] = (new Tag())->setId($counter)->setName($tag);
 
             // Pridávame tagy do poľa pripraveného na odoslanie vo forme ID a mena
-            $tagsForValues[] = [
-                'id' => $counter,
-                'name' => $tag
-            ];
-
             $counter++;
         }
 
         // Vraciame obe polia - jedno pre entity a druhé pre $values['tags']
-        return [
-            'tagsEntitiesArray' => $tagsEntitiesArray,
-            'tagsForValues' => $tagsForValues
-        ];
+        return $tagsEntitiesArray;
     }
 
     public function processPhotoUrls(array $photoUrls): array
@@ -58,13 +50,9 @@ class AnimalService
         return $photoUrlsToSend;
     }
 
-    public function deleteImages(int $animalId): ?array
+    public function deleteImages(Animal $animal): ?array
     {
-        $animal = $this->xmlManager->getAnimalById($animalId);
-
-        if ($animal === null) {
-            return null;
-        }
+//        $animal = $this->xmlManager->getAnimalById($animalId);
 
         $problemImages = [];
         foreach ($animal->getPhotoUrls() as $photoUrl) {
@@ -72,7 +60,7 @@ class AnimalService
 
             // Over, či súbor existuje
             if (file_exists($filePath)) {
-                echo 'subor existuje';
+
                 // Pokús sa vymazať súbor
                 if (!unlink($filePath)) {
                     $problemImages[] = $photoUrl;
