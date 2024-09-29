@@ -11,21 +11,31 @@ class Bootstrap
 {
 	public static function boot(): Configurator
 	{
-		$configurator = new Configurator;
-		$rootDir = dirname(__DIR__);
+        $configurator = new Configurator;
+        $rootDir = dirname(__DIR__);
 
-		//$configurator->setDebugMode('secret@23.75.345.200'); // enable for your remote IP
-		$configurator->enableTracy($rootDir . '/log');
+        $logDir = $rootDir . '/log';
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
 
-		$configurator->setTempDirectory($rootDir . '/temp');
+        $configurator->enableTracy($logDir);
 
-		$configurator->createRobotLoader()
-			->addDirectory(__DIR__)
-			->register();
+        $tempDir = $rootDir . '/temp';
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
 
-		$configurator->addConfig($rootDir . '/config/common.neon');
-		$configurator->addConfig($rootDir . '/config/services.neon');
+        $configurator->setTempDirectory($tempDir);
 
-		return $configurator;
+        $configurator->createRobotLoader()
+            ->addDirectory(__DIR__)
+            ->register();
+
+        // Načítajte konfigurácie z NEON súborov
+        $configurator->addConfig($rootDir . '/config/common.neon');
+        $configurator->addConfig($rootDir . '/config/services.neon');
+
+        return $configurator;
 	}
 }
