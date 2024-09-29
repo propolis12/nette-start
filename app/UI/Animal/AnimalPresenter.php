@@ -228,6 +228,7 @@ class AnimalPresenter extends Presenter
                 return;
             }
             $this->xmlManager->writeToFile($animal);
+            $this->flashMessage('zviera uspesne vytvorene');
 
 //            ak sa zviera updatuje
         } else {
@@ -254,8 +255,10 @@ class AnimalPresenter extends Presenter
             }
 
             $this->xmlManager->updateExisting($animal);
-            $this->redirect('this');
+            $this->flashMessage('zviera spesne updatnute');
         }
+
+        $this->redirect('Home:default');
     }
 
 }
