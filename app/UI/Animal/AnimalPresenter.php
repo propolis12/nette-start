@@ -106,7 +106,6 @@ class AnimalPresenter extends Presenter
     {
         $animal = $this->xmlManager->getAnimalById($animalId);
         $this->template->photoUrls = $animal->getPhotoUrls();
-//        $this->template->animal = $this->animal;
     }
 
     public function actionDeletePet(int $animalId): void
@@ -115,9 +114,6 @@ class AnimalPresenter extends Presenter
             $success = $this->animalApiClient->deleteAnimal($animalId);
             if ($success) {
                 $this->xmlManager->deletePet($animalId);
-//                doplnit validacie na formular
-            }
-            if ($success) {
                 $this->flashMessage('Zviera bolo úspešne zmazané.', 'success');
             } else {
                 $this->flashMessage('Nepodarilo sa zmazať zviera.', 'error');
@@ -179,6 +175,7 @@ class AnimalPresenter extends Presenter
     {
         $values = (array) $form->getValues();
         $tags = explode(',', $values['tags']['name']);
+        $tags = array_filter($tags, fn($tag) => trim($tag) !== '');
         $tagsEntitiesArray = $this->animalService->processTags($tags)['tagsEntitiesArray'];
         $values['tags'] = $this->animalService->processTags($tags)['tagsForValues'];
 
@@ -203,6 +200,8 @@ class AnimalPresenter extends Presenter
             ->setPhotoUrls($values['photoUrls'])
             ->setTags($tagsEntitiesArray);
 
+
+//        ak sa zviera vytvara
         if ($values['id'] === AnimalApiClient::ACTION_CREATE) {
 
             $lowestAvailableId = $this->xmlManager->getLowestAvailableId();
@@ -210,24 +209,20 @@ class AnimalPresenter extends Presenter
             $values['id'] = $lowestAvailableId;
             try {
                 print_r($values);
-                $this->animalApiClient->createAnimal($values);
+                $this->animalApiClient->createAnimal($animal);
             } catch (\Exception $e) {
                 $this->flashMessage('Nepodarilo sa vytvorit zviera.', 'error');
                 return;
             }
             $this->xmlManager->writeToFile($animal);
 
+//            ak sa zviera updatuje
         } else {
                 $animal->setId($values['id']);
 
             try {
 
-//                $removePhotoUrls = $values['removePhotoUrls'];  // Uchováš hodnotu removePhotoUrls
-//                unset($values['removePhotoUrls']);  // Dočasne odstrániš removePhotoUrls
-
-                $this->animalApiClient->updateAnimal($values);
-
-//                $values['removePhotoUrls'] = $removePhotoUrls;
+                $this->animalApiClient->updateAnimal($animal);
 
             } catch (\Exception $e) {
                 $this->flashMessage($e->getMessage(), 'error');

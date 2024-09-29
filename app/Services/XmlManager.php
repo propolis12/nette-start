@@ -80,7 +80,7 @@ class XmlManager
         return false;
     }
 
-    public function updateExisting(Animal $animal)
+    public function updateExisting(Animal $animal): void
     {
         $currentXmlFile = $this->loadFile();
         foreach ($currentXmlFile->animal as $animalItem) {

@@ -12,8 +12,6 @@ use Nette\Utils\ArrayHash;
 class AnimalApiClient
 {
 
-//    private const API_URL = 'https://petstore3.swagger.io/api/v3/';
-
     public const ACTION_CREATE = 'create',
         ACTION_UPDATE = 'update',
         ACTION_DELETE = 'delete';
@@ -75,7 +73,6 @@ class AnimalApiClient
             } else {
                 echo "Žiadne zvieratá nenájdené.";
             }
-//            print_r($animals);
             return $animals;
         } catch (RequestException $e) {
             throw new \Exception("API request failed: " . $e->getMessage());
@@ -88,18 +85,15 @@ class AnimalApiClient
             $url = sprintf('%spet/%s', $this->apiUrl, $id);
             $response = $this->client->get($url);
             return $response->getStatusCode() === 200;
-//            $body = $response->getBody()->getContents();
-//            return json_decode($body, true);
         } catch (RequestException $e) {
             return false;
             throw new \Exception("API request failed: " . $e->getMessage());
         }
     }
 
-    public function createAnimal(array $data, $action = 'POST'): bool
+    public function createAnimal(Animal $data, $action = 'POST'): bool
     {
         echo json_encode($data);
-//        die();
         try {
             $url = sprintf('%spet', $this->apiUrl);
 
@@ -114,21 +108,16 @@ class AnimalApiClient
         }
     }
 
-    public function updateAnimal(array $data): bool
+    public function updateAnimal(Animal $data): bool
     {
-//        echo json_encode($data);
-
         $method = 'PUT';
-        if (!$this->existsOnServer($data['id'])) {
+        if (!$this->existsOnServer($data->getId())) {
             $method = 'POST';
         }
         echo 'json_encode($data)';
         echo $method;
         try {
             $url = sprintf('%spet', $this->apiUrl);
-//            $response = $this->client->put($url, [
-//                'json' => $data
-//            ]);
 
             $response = $this->client->request($method, $url, [
                 'json' => $data

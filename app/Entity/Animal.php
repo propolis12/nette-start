@@ -2,7 +2,9 @@
 
 namespace App\Entity;
 
-class Animal
+use JsonSerializable;
+
+class Animal implements JsonSerializable
 {
     private int $id;
 
@@ -118,4 +120,21 @@ class Animal
     }
 
 
+    public function jsonSerialize(): mixed
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'category' => [
+                'id' => $this->category->getId(),
+                'name' => $this->category->getName(),
+            ],
+            'photoUrls' => $this->photoUrls,
+            'status' => $this->status,
+            'tags' => array_map(fn($tag) => [
+                'id' => $tag->getId(),
+                'name' => $tag->getName(),
+            ], $this->tags),
+        ];
+    }
 }
