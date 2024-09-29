@@ -7,7 +7,6 @@ use App\Entity\Category;
 use App\Entity\Tag;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use Nette\Utils\ArrayHash;
 
 class AnimalApiClient
 {
@@ -48,7 +47,6 @@ class AnimalApiClient
 
             if (isset($xml->item[0])) {
                 foreach ($xml->item as $item) {
-                    echo $item->id;
                     $animal = (new Animal())
                         ->setId((int) $item->id)
                         ->setStatus($status)
@@ -87,13 +85,11 @@ class AnimalApiClient
             return $response->getStatusCode() === 200;
         } catch (RequestException $e) {
             return false;
-            throw new \Exception("API request failed: " . $e->getMessage());
         }
     }
 
     public function createAnimal(Animal $data, $action = 'POST'): bool
     {
-        echo json_encode($data);
         try {
             $url = sprintf('%spet', $this->apiUrl);
 
@@ -114,8 +110,6 @@ class AnimalApiClient
         if (!$this->existsOnServer($data->getId())) {
             $method = 'POST';
         }
-        echo 'json_encode($data)';
-        echo $method;
         try {
             $url = sprintf('%spet', $this->apiUrl);
 

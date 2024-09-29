@@ -4,14 +4,11 @@ namespace App\UI\Animal;
 
 use App\Entity\Animal;
 use App\Entity\Category;
-use App\Entity\Tag;
 use App\Services\AnimalApiClient;
 use App\Services\AnimalService;
 use App\Services\XmlManager;
-use Contributte\FormMultiplier\Multiplier;
 use Nette\Application\UI\Form;
 use Nette\Application\UI\Presenter;
-use Nette\Forms\Container;
 
 class AnimalPresenter extends Presenter
 {
@@ -73,6 +70,13 @@ class AnimalPresenter extends Presenter
         $this->template->action = 'updatePet';
     }
 
+    public function actionUpdatePet(int $animalId): void
+    {
+        $this->getComponent('createPet')->addCheckbox('removePhotoUrls', 'Vymazať aktuálne obrázky');
+    }
+
+
+
     public function renderUpdatePet(int $animalId)
     {
         $animals = $this->xmlManager->readAnimalsFromFile();
@@ -80,7 +84,7 @@ class AnimalPresenter extends Presenter
             if ($animal->getId() === $animalId) {
                 $this->template->animal = $animal;
 
-                $this->getComponent('createPet')->setDefaults($animal->toArray());
+                $this->getComponent('createPet')->getComponent('name')->setValue($animal->getName());
                 $this->getComponent('createPet')->getComponent('id')->setValue($animal->getId());
                 $this->getComponent('createPet')->getComponent('category')->getComponent('id')->setValue($animal->getCategory()->getId())->setHtmlAttribute('readonly', 'readonly');
                 $this->getComponent('createPet')->getComponent('category')->getComponent('name')->setValue($animal->getCategory()->getName());
@@ -90,8 +94,6 @@ class AnimalPresenter extends Presenter
                 }
                 $tagsString = implode(',', $names);
                 $this->getComponent('createPet')->getComponent('tags')->getComponent('name')->setValue($tagsString);
-
-                $this->getComponent('createPet')->addCheckbox('removePhotoUrls', 'vymazat aktualne obrazky');;
 
                 $this->getComponent('createPet')->getComponent('photoUrls')->setValue(implode(', ', $animal->getPhotoUrls()));
 
@@ -127,45 +129,69 @@ class AnimalPresenter extends Presenter
 
     public function createComponentCreatePet(): Form
     {
-
         $form = new Form;
 
+        // Pridanie CSS triedy k celému formuláru
+        $form->getElementPrototype()->class('styled-form');
+
+        // Skryté pole pre ID
         $form->addHidden('id', AnimalApiClient::ACTION_CREATE);
 
+        // Pole pre meno
         $form->addText('name', 'Meno')
-            ->setRequired();
+            ->setRequired()
+            ->setHtmlAttribute('class', 'form-control');
 
-        $categoryContainer = $form->AddContainer('category');
+        // Kontajner pre kategóriu
+        $categoryContainer = $form->addContainer('category');
 
         $categoryContainer->addText('id', 'Category Id:')
-            ->setRequired()->addRule(Form::Integer, 'zadajte cele cislo')->addRule(Form::Range, 'Cislo musi byt nezaporne', [0, null]);
+            ->setRequired()
+            ->addRule(Form::Integer, 'Zadajte celé číslo')
+            ->addRule(Form::Range, 'Číslo musí byť nezáporné', [0, null])
+            ->setHtmlAttribute('class', 'form-control');
 
         $categoryContainer->addText('name', 'Category Name:')
-            ->setRequired();
+            ->setRequired()
+            ->setHtmlAttribute('class', 'form-control');
 
-        $tagContainer = $form->AddContainer('tags');
+        // Kontajner pre tagy
+        $tagContainer = $form->addContainer('tags');
 
-        $tagContainer->addText('name', 'Tag Name:')->setHtmlAttribute('placeholder', 'tagy oddelte ciarkami');
+        $tagContainer->addText('name', 'Tag Name:')
+            ->setHtmlAttribute('placeholder', 'Tagy oddeľte čiarkami')
+            ->setHtmlAttribute('class', 'form-control');
 
+        // Nahrávanie obrázkov
         $form->addUpload('photoUrls', 'Nahrávanie obrázkov')
             ->setHtmlAttribute('multiple', 'multiple') // Povolenie nahrávať viacero súborov
             ->addRule(Form::Image, 'Môžete nahrať iba obrázky.')
-            ->addRule(Form::MaxFileSize, 'Maximálna veľkosť súboru je 2 MB', 2 * 1024 * 1024);
+            ->addRule(Form::MaxFileSize, 'Maximálna veľkosť súboru je 2 MB', 2 * 1024 * 1024)
+            ->setHtmlAttribute('class', 'form-control');
 
-        $form->addSelect('status', 'status', [
+        // Select pre status
+        $form->addSelect('status', 'Status', [
             'available' => self::STATUS_AVAILABLE,
             'pending' => self::STATUS_PENDING,
             'sold' => self::STATUS_SOLD,
         ])
-            ->setRequired();
+            ->setRequired()
+            ->setHtmlAttribute('class', 'form-control');
+
+        // Pridanie enctype pre formulár, aby podporoval nahrávanie súborov
         $form->getElementPrototype()->enctype = 'multipart/form-data';
 
-        $form->addSubmit('send', 'Ulozit');
 
+        $form->addSubmit('send', 'Uložiť')
+            ->setHtmlAttribute('class', 'btn btn-primary');
+
+
+        // Nastavenie callbacku po úspešnom submitnutí
         $form->onSuccess[] = $this->createPetSucceeded(...);
 
         return $form;
     }
+
 
     public function createComponentUpdatePet(): Form
     {
@@ -174,17 +200,13 @@ class AnimalPresenter extends Presenter
 
     private function createPetSucceeded(Form $form): void
     {
-//        if ($form->hasErrors()) {
-//            dump($form->getErrors());  // Vypíše chyby vo formulári
-//        }
+
         $values = (array) $form->getValues();
-        print_r($values);
+
         $tags = explode(',', $values['tags']['name']);
-        print_r($values);
-//        die();
+
         $tags = array_filter($tags, fn($tag) => trim($tag) !== '');
         $tagsEntitiesArray = $this->animalService->processTags($tags);
-
 
         $animal = (new Animal())
             ->setName($values['name'])
@@ -199,7 +221,7 @@ class AnimalPresenter extends Presenter
             $lowestAvailableId = $this->xmlManager->getLowestAvailableId();
             $animal->setId($lowestAvailableId);
             try {
-                print_r($animal);
+
                 $this->animalApiClient->createAnimal($animal);
             } catch (\Exception $e) {
                 $this->flashMessage('Nepodarilo sa vytvorit zviera.', 'error');
@@ -209,10 +231,9 @@ class AnimalPresenter extends Presenter
 
 //            ak sa zviera updatuje
         } else {
-                $animal->setId($values['id']);
+            $animal->setId($values['id']);
             $currentStoredAnimal = $this->xmlManager->getAnimalById($animal->getId());
-
-            if (isset($values['removePhotoUrls']) && $values['removePhotoUrls'] === true) {
+            if (isset($values['removePhotoUrls']) && $values['removePhotoUrls']) {
 
                 $undeletedFiles = $this->animalService->deleteImages($currentStoredAnimal);
                 if (count($undeletedFiles) > 0) {
@@ -220,7 +241,6 @@ class AnimalPresenter extends Presenter
                 }
 
             } else {
-                print_r($currentStoredAnimal->getPhotoUrls());
                 $animal->setPhotoUrls(array_merge($currentStoredAnimal->getPhotoUrls(), $this->animalService->processPhotoUrls($values['photoUrls'])));
             }
 
@@ -234,6 +254,7 @@ class AnimalPresenter extends Presenter
             }
 
             $this->xmlManager->updateExisting($animal);
+            $this->redirect('this');
         }
     }
 

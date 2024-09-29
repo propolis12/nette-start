@@ -10,7 +10,7 @@ class AnimalService
 
     private string $wwwDir;
 
-    public function __construct(string $wwwDir, private readonly XmlManager $xmlManager)
+    public function __construct(string $wwwDir)
     {
         $this->wwwDir = $wwwDir;
     }
@@ -22,14 +22,10 @@ class AnimalService
         $counter = 1;
 
         foreach ($tags as $tag) {
-            // Vytvárame Tag entity
             $tagsEntitiesArray[] = (new Tag())->setId($counter)->setName($tag);
-
-            // Pridávame tagy do poľa pripraveného na odoslanie vo forme ID a mena
             $counter++;
         }
 
-        // Vraciame obe polia - jedno pre entity a druhé pre $values['tags']
         return $tagsEntitiesArray;
     }
 
@@ -52,16 +48,12 @@ class AnimalService
 
     public function deleteImages(Animal $animal): ?array
     {
-//        $animal = $this->xmlManager->getAnimalById($animalId);
-
         $problemImages = [];
         foreach ($animal->getPhotoUrls() as $photoUrl) {
             $filePath = $this->wwwDir . $photoUrl;
 
-            // Over, či súbor existuje
             if (file_exists($filePath)) {
 
-                // Pokús sa vymazať súbor
                 if (!unlink($filePath)) {
                     $problemImages[] = $photoUrl;
                 }

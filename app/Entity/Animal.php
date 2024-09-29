@@ -87,17 +87,6 @@ class Animal implements JsonSerializable
         return $this;
     }
 
-    // Method to return array representation (for XML or API usage)
-    public function toArray(): array
-    {
-        return [
-            'name' => $this->name,
-            'category' => $this->category,
-            'image' => $this->photoUrls,
-            'status' => $this->status,
-        ];
-    }
-
     public function addTag(Tag $tag): void
     {
         $this->tags[] = $tag;
