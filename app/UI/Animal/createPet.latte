@@ -7,3 +7,28 @@
 <div class="form-container">
     {control createPet}
 </div>
+
+<script>
+    // Vyhľadanie formulára podľa ID
+    document.getElementById('frm-createPet').addEventListener('submit', function(e) {
+        e.preventDefault();  // Zabraň, aby sa formulár odoslal klasicky
+
+        // Príprava údajov z formulára
+        var formData = new FormData(this);
+
+        // Vytvorenie XMLHttpRequest pre AJAX odoslanie
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/your-endpoint-url', true);  // Nastav URL, kam sa má formulár odoslať
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                alert('Formulár bol úspešne odoslaný!');
+            } else {
+                alert('Chyba pri odosielaní formulára.');
+            }
+        };
+
+        // Odošli dáta
+        xhr.send(formData);
+    });
+</script>
