@@ -25,11 +25,11 @@ final class RouterFactory
 
         // Definícia rout pre API výstupy
         $router->addRoute('<presenter>/<action>[/<id>]', 'Home:default');
-        $router->addRoute('/api/pet', 'Api\PetPresenter:add');
-        $router->addRoute('/api/pet/findByStatus', 'Api\PetPresenter:findByStatus');
-        $router->addRoute('/api/pet/findByTags', 'Api\PetPresenter:findByTags');
-        $router->addRoute('/api/pet/<petId>', 'Api\PetPresenter:findById');
-        $router->addRoute('/api/pet/<petId>/uploadImage', 'Api\PetPresenter:uploadImage');
+//        $router->addRoute('/api/pet', 'ApiPetPresenter:add');
+//        $router->addRoute('/api/pet/findByStatus', 'ApiPresenter:findByStatus');
+//        $router->addRoute('/api/pet/findByTags', 'ApiPresenter:findByTags');
+//        $router->addRoute('/api/pet/<petId>', 'ApiPresenter:findById');
+//        $router->addRoute('/api/pet/<petId>/uploadImage', 'ApiPresenter:uploadImage');
 
         return $router;
     }

@@ -1,5 +1,6 @@
 parameters:
-
+    tracy:
+        enabled: %debugMode%
 
 application:
 	errorPresenter:

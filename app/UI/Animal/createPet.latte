@@ -8,27 +8,46 @@
     {control createPet}
 </div>
 
-<script>
-    // Vyhľadanie formulára podľa ID
-    document.getElementById('frm-createPet').addEventListener('submit', function(e) {
-        e.preventDefault();  // Zabraň, aby sa formulár odoslal klasicky
+{/block content}
 
-        // Príprava údajov z formulára
-        var formData = new FormData(this);
+{block scripts}
+    <script>
+        console.log('aaaaaaaaaaaaaaaaaa')
 
-        // Vytvorenie XMLHttpRequest pre AJAX odoslanie
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/your-endpoint-url', true);  // Nastav URL, kam sa má formulár odoslať
+        // Vyhľadanie formulára podľa ID
+        $(document).ready(function() {
 
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                alert('Formulár bol úspešne odoslaný!');
-            } else {
-                alert('Chyba pri odosielaní formulára.');
-            }
-        };
+            // Vyhľadanie formulára podľa ID
+            $('#frm-createPet').on('submit', function(e) {
+                e.preventDefault();  // Zabraň, aby sa formulár odoslal klasicky
+                var formData = {
+                    id: $('input[name="id"]').val(),
+                    name: $('input[name="name"]').val(),
+                    category: {
+                        id: $('input[name="category[id]"]').val(),
+                        name: $('input[name="category[name]"]').val(),
+                    },
+                    tags: $('input[name="tags[name]"]').val(),
+                    status: $('select[name="status"]').val()
+                };
 
-        // Odošli dáta
-        xhr.send(formData);
-    });
-</script>
+                // AJAX požiadavka
+                $.ajax({
+                    url: '/api/add',  // URL na tvoj API endpoint
+                    type: 'POST',  // Typ požiadavky
+                    data: JSON.stringify(formData),  // Dáta prevedené na JSON string
+                    contentType: 'application/json',  // Nastav záhlavie na JSON
+                    success: function(response) {
+                        // Spracovanie úspešnej odpovede
+                        alert(response.message);  // Napr. zobrazenie správy
+                    },
+                    error: function(xhr) {
+                        // Spracovanie chyby
+                        alert('Nastala chyba pri odosielaní formulára.');
+                    }
+                });
+            });
+        });
+    </script>
+
+{/block}

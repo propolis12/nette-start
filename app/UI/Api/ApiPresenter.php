@@ -1,15 +1,17 @@
 <?php
 declare(strict_types=1);
 
-namespace App\UI\Pet;
+namespace App\UI\Api;
 
 use App\Services\AnimalApiClient;
 use App\Services\AnimalService;
 use App\Services\XmlManager;
 use Nette\Application\Responses\JsonResponse;
 use Nette\Application\UI\Presenter;
+use Nette\Http\IResponse;
+use Tracy\Debugger;
 
-class PetApiPresenter extends Presenter
+class ApiPresenter extends Presenter
 {
 
     private const STATUS_AVAILABLE = 'available',
@@ -37,15 +39,66 @@ class PetApiPresenter extends Presenter
      */
     public function actionAdd(): void
     {
-        // Simulácia pridania maznáčika do databázy
-        $newPet = [
-            'id' => rand(1, 1000),
-            'name' => 'New Pet',
-            'status' => 'available'
+
+        $this->sendResponse(new JsonResponse([
+            'status' => 'success',
+            'message' => 'Pet bol úspešne pridaný!',
+        ]));
+
+        $httpRequest = $this->getHttpRequest();  // Získanie HTTP požiadavky
+//        echo 'kkt';
+//        die();
+        // Skontroluj, či ide o POST požiadavku
+        if ($httpRequest->getMethod() !== 'POST') {
+            $this->error('Invalid request method', IResponse::S405_MethodNotAllowed);
+        }
+
+        // Načítanie textových dát z formulára (pre JSON body alebo POST dáta)
+        $postData = $httpRequest->getPost();  // Toto načíta všetky dáta mimo súborov
+
+        // Prijatie súborov (ak nejaké sú)
+        $files = $httpRequest->getFiles();  // Získa nahrané súbory
+
+        print_r($postData);
+        Debugger::dump($postData);
+//        // Spracovanie nahraných súborov (ak boli nahraté)
+//        if (!isset($files['photoUrls']) || !$files['photoUrls'] instanceof FileUpload) {
+//            $this->sendJson(['status' => 'error', 'message' => 'Žiadne súbory neboli nahraté.']);
+//            return;
+//        }
+
+        if (isset($files['photoUrls'])) {
+            // Predpokladá sa, že pole 'photoUrls' je pole viacerých súborov
+            foreach ($files['photoUrls'] as $file) {
+                if ($file->isOk() && $file->isImage()) {
+                    // Uloženie súboru na server (napr. do priečinka 'uploads')
+                    $filePath = 'uploads/' . $file->getSanitizedName();
+                    $file->move($filePath);  // Presun súboru na nové miesto
+                }
+            }
+        }
+
+
+
+        // Príprava textových dát
+        $data = [
+            'name' => $postData['name'] ?? null,
+            'category' => [
+                'id' => $postData['category']['id'] ?? null,
+                'name' => $postData['category']['name'] ?? null,
+            ],
+            'tags' => $postData['tags']['name'] ?? null,
+            'status' => $postData['status'] ?? null
         ];
 
-        // Vrátenie JSON odpovede
-        $this->sendResponse(new JsonResponse(['message' => 'Pet added successfully', 'pet' => $newPet]));
+        // Tu môžeš spracovať a uložiť textové dáta do databázy alebo spraviť iné akcie
+        // Napríklad uloženie do DB alebo volanie externého API
+
+        // Vráť odpoveď ako JSON
+        $this->sendResponse(new JsonResponse([
+            'status' => 'success',
+            'message' => 'Pet bol úspešne pridaný!',
+        ]));
     }
 
     /**
