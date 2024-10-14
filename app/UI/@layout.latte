@@ -134,15 +134,96 @@
 		.hidden-checkbox {
 			display: none;
 		}
+
+		.styled-select {
+			width: 100%;  /* Zaberá celú šírku rodičovského kontajnera */
+			padding: 10px;
+			border-radius: 5px;  /* Zaoblené rohy */
+			border: 1px solid #ced4da;
+			background-color: white;
+			font-size: 16px;
+			color: #333;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  /* Jemný tieň */
+			appearance: none;  /* Odstráni defaultný štýl prehliadača */
+			-webkit-appearance: none;  /* Pre WebKit prehliadače */
+			-moz-appearance: none;  /* Pre Mozilla prehliadače */
+		}
+
+		.styled-select:focus {
+			outline: none;
+			border-color: #007bff;  /* Zmena farby pri zaostrení */
+			box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);  /* Zvýraznenie tieňa pri zaostrení */
+		}
 	</style>
+
+	<script>
+		function loadAnimals(action, url) {
+			$.ajax({
+				url: url,  // URL na tvoj API endpoint
+				type: 'GET',  // Typ požiadavky
+				success: function (response) {
+					if (response.status === 'success') {
+						var animals = response.data;
+						var animalContainer = $('.animals');  // Vyberieš kontajner pre zvieratá
+						animalContainer.empty();  // Vymažeš existujúci obsah
+
+						animals.forEach(function (animal) {
+							var actionUrl = '';
+							console.log(action)
+							if (action === 'delete') {
+								actionUrl = '/api/pet/' + animal.id;
+							} else if (action === 'update') {
+								actionUrl = '/api/pet/' + animal.id;
+							}
+							var animalHTML = '<div class="animal-card">' +
+									'<a href="#" class="animal-action" data-action-url="' + actionUrl + '" data-id="' + animal.id + '">' +
+									'id: ' + animal.id + '<br>' +
+									'name: ' + animal.name +
+									'</a>';
+
+							if (animal.tags && animal.tags.length > 0) {
+								animalHTML += '<div class="animal-tags">' +
+										'<strong>Tags:</strong> ' +
+										animal.tags.map(function(tag) {
+											return '<span class="tag">' + tag.name + '</span>';
+										}).join(', ') +  // Oddelíme tagy čiarkami
+										'</div>';
+							} else {
+								animalHTML += '<div class="animal-tags"><p>No tags available</p></div>';
+							}
+
+							animalHTML += '<div class="animal-image" style="max-width: 100%">' +
+									(animal.photoUrls.length > 0
+													? '<img src="' + animal.photoUrls[0] + '" alt="animal image">'
+													: '<p>No image available</p>'
+									) +
+									'</div>';
+
+							animalHTML += '</div>';
+
+							// Pridanie vygenerovaného HTML do kontajnera
+							animalContainer.append(animalHTML);
+						});
+					}
+				},
+				error: function (xhr) {
+					var response = xhr.responseJSON;
+					// Spracovanie chyby
+					alert(response.message);
+					console.log(response.data)
+				}
+			});
+		}
+	</script>
+
 </head>
 
 <body>
 	<div n:foreach="$flashes as $flash" n:class="flash, $flash->type">{$flash->message}</div>
 
+
 	{include content}
 
 	{include scripts}
-
 </body>
 </html>

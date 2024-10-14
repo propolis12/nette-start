@@ -36,14 +36,14 @@ class AnimalPresenter extends Presenter
         $this->template->statuses = self::ANIMAL_STATUSES;
     }
 
-    public function renderAnimalsByStatus(string $status): void
+    public function renderAnimalsByStatus(): void
     {
-        if (!in_array($status, self::ANIMAL_STATUSES)) {
-            $this->error('Invalid animal status: ' . $status);
-        }
+//        if (!in_array($status, self::ANIMAL_STATUSES)) {
+//            $this->error('Invalid animal status: ' . $status);
+//        }
 
-        $animals = $this->animalApiClient->getAllAnimalsByStatus($status);
-        $this->template->animals = $animals;
+//        $animals = $this->animalApiClient->getAllAnimalsByStatus($status);
+//        $this->template->animals = $animals;
     }
 
     public function actionCreatePet()
@@ -58,7 +58,7 @@ class AnimalPresenter extends Presenter
     {
         $animals = $this->xmlManager->readAnimalsFromFile();
         $this->template->animals = $animals;
-        $this->template->action = 'deletePet';
+        $this->template->action = 'delete';
         $this->setView('selectPetToUpdate');
 
     }
@@ -67,7 +67,7 @@ class AnimalPresenter extends Presenter
     {
         $animals = $this->xmlManager->readAnimalsFromFile();
         $this->template->animals = $animals;
-        $this->template->action = 'updatePet';
+        $this->template->action = 'update';
     }
 
     public function actionUpdatePet(int $animalId): void
@@ -187,7 +187,7 @@ class AnimalPresenter extends Presenter
 
 
         // Nastavenie callbacku po úspešnom submitnutí
-        $form->onSuccess[] = $this->createPetSucceeded(...);
+//        $form->onSuccess[] = $this->createPetSucceeded(...);
 
         return $form;
     }

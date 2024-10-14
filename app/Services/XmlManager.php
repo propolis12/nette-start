@@ -70,6 +70,22 @@ class XmlManager
         return $animals;
     }
 
+    public function readAnimalsFromFileByStatus(string $status): array
+    {
+        $animals = [];
+
+        $currentXmlFile = $this->loadFile();
+
+        foreach ($currentXmlFile->animal as $animal) {
+            if ((string) $animal->status === $status) {
+                $animalToWrite = $this->getAnimalById((int) $animal->id);
+                $animals[] = $animalToWrite;
+            }
+        }
+
+        return $animals;
+    }
+
     public function checkIfExists(Animal $animal): bool
     {
         $currentXmlFile = $this->loadFile();

@@ -1,21 +1,71 @@
 
 {block content}
     <div><a class="back-link" n:href="Home:default">Späť</a></div>
-
+    <input type="hidden" id="action" value="{$action}">
     <div class="animals">
-        <div class="animal-card" n:foreach="$animals as $animal">
-            <a n:href="Animal:{$action} $animal->getId()">
-                id: {$animal->getId()} <br>
-                name: {$animal->getName()}
-            </a>
-            <div class="animal-image" style="max-width: 100%">
-                {if count($animal->getPhotoUrls()) > 0}
-                    <img src="{$animal->getPhotoUrls()[0]}" alt="animal image">
-                {else}
-                    <p>No image available</p>
-                {/if}
-            </div>
-        </div>
+{*        <div class="animal-card" n:foreach="$animals as $animal">*}
+{*            <a n:href="Animal:{$action} $animal->getId()">*}
+{*                id: {$animal->getId()} <br>*}
+{*                name: {$animal->getName()}*}
+{*            </a>*}
+{*            <div class="animal-image" style="max-width: 100%">*}
+{*                {if count($animal->getPhotoUrls()) > 0}*}
+{*                    <img src="{$animal->getPhotoUrls()[0]}" alt="animal image">*}
+{*                {else}*}
+{*                    <p>No image available</p>*}
+{*                {/if}*}
+{*            </div>*}
+{*        </div>*}
 
     </div>
+{/block}
+
+{block scripts}
+
+{*    <script type="module" src="/Scripts/functions.js"></script>*}
+
+    <script>
+
+        // import { loadAnimals } from '/Scripts/functions.js';
+        $(document).ready(function() {
+
+            var action = $('#action').val();
+            var url = '/api/select-pet';
+
+            console.log(action)
+            loadAnimals(action, url)
+
+            $(document).on('click', '.animal-action', function (event) {
+                event.preventDefault();  // Zabráni presmerovaniu na inú stránku
+                var httpMethod = {$action};
+                var actionUrl = $(this).data('action-url');
+                var id = $(this).data('id')// Získa ID zvieraťa z data-id
+
+                // Tu pošli AJAX požiadavku na zmazanie alebo update zvieraťa
+                $.ajax({
+                    url: actionUrl,  // Alebo '/api/update/' + petId, ak je to update
+                    type: httpMethod,  // Alebo DELETE, ak ide o mazanie
+                    success: function (response) {
+                        alert(response.message);  // Oznám užívateľovi úspech
+
+                    },
+                    error: function (xhr) {
+                        alert('Chyba pri spracovaní požiadavky.');
+                    }
+                });
+
+                loadAnimals(action, url)
+            })
+
+
+
+        });
+
+
+
+
+
+
+    </script>
+
 {/block}

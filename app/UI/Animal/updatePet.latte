@@ -1,5 +1,5 @@
 {block content}
-
+   
 <div><a class="back-link" n:href="Home:default">Spat</a></div>
 
 <div class="image-container"><h2>Upravte zviera {$animal->getId()}</h2>
@@ -22,3 +22,67 @@
     {control createPet}
 </div>
 
+
+{/block}
+
+{block scripts}
+
+    <script>
+        console.log('aaaaaaaaaaaaaaaaaa')
+
+        // Vyhľadanie formulára podľa ID
+        $(document).ready(function() {
+
+        var pet = $.ajax({
+            url: '/api/pet/' + petId,  // Endpoint pre volanie na findById
+            type: 'GET',  // Používame GET požiadavku
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Ak je zviera nájdené, vypíš jeho dáta do konzoly alebo zobraz na stránke
+                    console.log('Pet found:', response.data);
+                    $('#result').html('Pet found: ' + JSON.stringify(response.data));
+                } else {
+                    // Ak zviera neexistuje, zobraz správu
+                    console.log('Error: Pet not found');
+                    $('#result').html('Error: Pet not found');
+                }
+            },
+            error: function(xhr, status, error) {
+                // V prípade, že nastane chyba v AJAX požiadavke
+                console.log('AJAX error:', error);
+                $('#result').html('AJAX error: ' + error);
+            }
+        });
+
+            // Vyhľadanie formulára podľa ID
+            $('#frm-createPet').on('submit', function(e) {
+                e.preventDefault();  // Zabraň, aby sa formulár odoslal klasicky
+                console.log($('input[name="name"]').val())
+
+                var formData = new FormData(this);
+
+                console.log(formData)
+
+                // AJAX požiadavka
+                $.ajax({
+                    url: '/api/add',  // URL na tvoj API endpoint
+                    type: 'PUT',  // Typ požiadavky
+                    data: formData,  // FormData obsahuje všetky dáta aj súbory
+                    processData: false, // Zakáž jQuery spracovať dáta (je to potrebné pre FormData)
+                    contentType: false, // Zakáž jQuery nastaviť typ obsahu, FormData to spraví
+                    success: function(response) {
+                        // Spracovanie úspešnej odpovede
+                        alert(response.message);
+                        console.log(response.data); // Napr. zobrazenie správy
+                    },
+                    error: function(xhr) {
+                        var response = xhr.responseJSON;
+                        // Spracovanie chyby
+                        alert(response.message);
+                        console.log(response.data)
+                    }
+                });
+            });
+        });
+    </script>
+{/block}

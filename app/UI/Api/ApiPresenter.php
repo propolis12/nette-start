@@ -3,13 +3,18 @@ declare(strict_types=1);
 
 namespace App\UI\Api;
 
+use App\Entity\Animal;
+use App\Entity\Category;
 use App\Services\AnimalApiClient;
 use App\Services\AnimalService;
+use App\Services\InputValidator;
 use App\Services\XmlManager;
 use Nette\Application\Responses\JsonResponse;
 use Nette\Application\UI\Presenter;
+use Nette\Http\IRequest;
 use Nette\Http\IResponse;
 use Tracy\Debugger;
+use Tracy\ILogger;
 
 class ApiPresenter extends Presenter
 {
@@ -18,7 +23,7 @@ class ApiPresenter extends Presenter
         STATUS_PENDING = 'pending',
         STATUS_SOLD = 'sold';
 
-    private const ANIMAL_STATUSES = [
+    public const ANIMAL_STATUSES = [
         self::STATUS_AVAILABLE,
         self::STATUS_PENDING,
         self::STATUS_SOLD,
@@ -28,77 +33,98 @@ class ApiPresenter extends Presenter
     public function __construct(
         private readonly AnimalApiClient $animalApiClient,
         private readonly XmlManager      $xmlManager,
-        private readonly AnimalService $animalService
+        private readonly AnimalService $animalService,
+        private readonly InputValidator $inputValidator,
     )
     {
         parent::__construct();
     }
 
+    public function actionPet(int $petId = null): void
+    {
+        $httpRequest = $this->getHttpRequest();  // Získaš HTTP požiadavku
+
+        switch ($httpRequest->getMethod()) {
+            case 'GET':
+                // GET - nájdi zviera podľa ID
+                $this->findPetById($petId);
+                break;
+            case 'POST':
+                // POST - update zvieraťa podľa ID
+                if ($petId === null) {
+                     $this->add($httpRequest);
+                } else {
+                    $this->updatePet($petId);
+                }
+                break;
+            case 'DELETE':
+                // DELETE - zmaž zviera podľa ID
+                $this->delete($petId);
+                break;
+            default:
+                $this->error('Method not allowed', \Nette\Http\IResponse::S405_METHOD_NOT_ALLOWED);
+        }
+    }
+
     /**
      * Pridanie nového maznáčika (POST)
      */
-    public function actionAdd(): void
+    private function add(IRequest $request): JsonResponse
     {
 
-        $this->sendResponse(new JsonResponse([
-            'status' => 'success',
-            'message' => 'Pet bol úspešne pridaný!',
-        ]));
-
-        $httpRequest = $this->getHttpRequest();  // Získanie HTTP požiadavky
-//        echo 'kkt';
-//        die();
-        // Skontroluj, či ide o POST požiadavku
-        if ($httpRequest->getMethod() !== 'POST') {
-            $this->error('Invalid request method', IResponse::S405_MethodNotAllowed);
-        }
-
-        // Načítanie textových dát z formulára (pre JSON body alebo POST dáta)
-        $postData = $httpRequest->getPost();  // Toto načíta všetky dáta mimo súborov
-
-        // Prijatie súborov (ak nejaké sú)
-        $files = $httpRequest->getFiles();  // Získa nahrané súbory
-
-        print_r($postData);
-        Debugger::dump($postData);
-//        // Spracovanie nahraných súborov (ak boli nahraté)
-//        if (!isset($files['photoUrls']) || !$files['photoUrls'] instanceof FileUpload) {
-//            $this->sendJson(['status' => 'error', 'message' => 'Žiadne súbory neboli nahraté.']);
-//            return;
+//        $httpRequest = $this->getHttpRequest();  // Získanie HTTP požiadavky
+//
+//        // Skontroluj, či ide o POST požiadavku
+//        if ($httpRequest->getMethod() !== 'POST') {
+//            $this->error('Invalid request method', IResponse::S405_MethodNotAllowed);
 //        }
 
-        if (isset($files['photoUrls'])) {
-            // Predpokladá sa, že pole 'photoUrls' je pole viacerých súborov
-            foreach ($files['photoUrls'] as $file) {
-                if ($file->isOk() && $file->isImage()) {
-                    // Uloženie súboru na server (napr. do priečinka 'uploads')
-                    $filePath = 'uploads/' . $file->getSanitizedName();
-                    $file->move($filePath);  // Presun súboru na nové miesto
-                }
-            }
+        $postData = $request->getPost();
+        $errors = $this->inputValidator->validate($postData);
+
+        if (!empty($errors)) {
+            $this->sendResponse(new JsonResponse([
+                'status' => 'error',
+                'message' => 'nepodarilo sa pridat zviera: ' . implode(', ', $errors),
+//                'data' => implode(', ', $errors),
+            ]));
         }
 
+        $name = $postData['name']; // Napríklad meno zvieraťa
+        $categoryId = $postData['category']['id']; // Kategória
+        $categoryName = $postData['category']['name'];
+        $tags = $postData['tags']['name'];
+        $status = $postData['status'];
 
+        $tags = explode(',', $tags);
 
-        // Príprava textových dát
-        $data = [
-            'name' => $postData['name'] ?? null,
-            'category' => [
-                'id' => $postData['category']['id'] ?? null,
-                'name' => $postData['category']['name'] ?? null,
-            ],
-            'tags' => $postData['tags']['name'] ?? null,
-            'status' => $postData['status'] ?? null
-        ];
+        $tags = array_filter($tags, fn($tag) => trim($tag) !== '');
+        $tagsEntitiesArray = $this->animalService->processTags($tags);
 
-        // Tu môžeš spracovať a uložiť textové dáta do databázy alebo spraviť iné akcie
-        // Napríklad uloženie do DB alebo volanie externého API
+        $animal = (new Animal())
+            ->setName($name)
+            ->setCategory((new Category())->setId((int) $categoryId)->setName($categoryName))
+            ->setStatus($status)
+            ->setTags($tagsEntitiesArray);
 
-        // Vráť odpoveď ako JSON
+        $files = $request->getFiles(); // Toto načíta súbory z $_FILES
+        $uploadedPhotos = $files['photoUrls']; // Získať nahrané súbory
+
+        Debugger::log($uploadedPhotos, Debugger::INFO);
+
+        if (reset($uploadedPhotos) !== null) {
+            $animal->setPhotoUrls($this->animalService->processPhotoUrls($uploadedPhotos));
+        }
+
+        $lowestAvailableId = $this->xmlManager->getLowestAvailableId();
+        $animal->setId($lowestAvailableId);
+        $this->xmlManager->writeToFile($animal);
+
         $this->sendResponse(new JsonResponse([
             'status' => 'success',
             'message' => 'Pet bol úspešne pridaný!',
         ]));
+
     }
 
     /**
@@ -125,17 +151,21 @@ class ApiPresenter extends Presenter
     /**
      * Vyhľadanie maznáčikov podľa stavu (GET)
      */
-    public function actionFindByStatus(): void
+    public function actionFindByStatus(string $status): void
     {
+        Debugger::log($status, Debugger::INFO);
         // Simulácia vyhľadávania maznáčikov podľa stavu
-        $status = $this->getParameter('status');
-        $pets = [
-            ['id' => 1, 'name' => 'Buddy', 'status' => $status],
-            ['id' => 2, 'name' => 'Milo', 'status' => $status],
-        ];
+        if (!in_array($status, self::ANIMAL_STATUSES)) {
+            $this->error('Invalid animal status: ' . $status);
+        }
 
-        // Vrátenie JSON odpovede
-        $this->sendResponse(new JsonResponse(['message' => 'Pets found by status', 'pets' => $pets]));
+//        $animals = $this->animalApiClient->getAllAnimalsByStatus($status);
+        $animals = $this->xmlManager->readAnimalsFromFileByStatus($status);
+        Debugger::log($animals, Debugger::INFO);
+        $this->sendResponse(new JsonResponse([
+            'status' => 'success',
+            'data' => $animals
+        ]));
     }
 
     /**
@@ -159,45 +189,32 @@ class ApiPresenter extends Presenter
      */
     public function actionFindById(int $petId): void
     {
-        // Simulácia vyhľadania maznáčika podľa ID
-        $pet = [
-            'id' => $petId,
-            'name' => 'Buddy',
-            'status' => 'available'
-        ];
+        $pet = $this->xmlManager->getAnimalById($petId);
+        if ($pet !== null) {
+            $this->sendResponse(new JsonResponse(['status' => 'success', 'data' => $pet]));
+        } else {
+            $this->sendResponse(new JsonResponse(['status' => 'error']));
+        }
 
-        // Vrátenie JSON odpovede
-        $this->sendResponse(new JsonResponse(['message' => 'Pet found by ID', 'pet' => $pet]));
     }
 
-    /**
-     * Aktualizácia maznáčika s formulárom (POST)
-     */
-    public function actionUpdateWithForm(int $petId): void
-    {
-        // Simulácia aktualizácie maznáčika podľa ID a údajov z formulára
-        $updatedPet = [
-            'id' => $petId,
-            'name' => 'Updated Pet from Form',
-            'status' => 'pending'
-        ];
-
-        // Vrátenie JSON odpovede
-        $this->sendResponse(new JsonResponse(['message' => 'Pet updated successfully with form', 'pet' => $updatedPet]));
-    }
 
     /**
      * Mazanie maznáčika podľa ID (DELETE)
      */
-    public function actionDelete(int $petId): void
+    private function delete(int $petId): void
     {
-        // Skontroluj, že požiadavka je DELETE
-        if ($this->httpRequest->getMethod() !== 'DELETE') {
-            $this->error('Invalid request method', 405);
-        }
+        Debugger::log('som vo funkcii delete ' . $petId, Debugger::INFO);
+        Debugger::log($this->getRequest()->getParameters(), Debugger::INFO);
+        $animal = $this->xmlManager->getAnimalById($petId);
+        $undeletedFiles = $this->animalService->deleteImages($animal);
+        $this->xmlManager->deletePet($petId);
+        $message = 'zviera bolo uspesne zmazane';
 
-        // Simulácia mazania maznáčika podľa ID
-        $this->sendResponse(new JsonResponse(['message' => 'Pet deleted successfully', 'petId' => $petId]));
+        if (count($undeletedFiles) > 0) {
+            $message = sprintf('%s ale niektore obrazky sa nepodarilo vymazat : %s', $message, implode(', ', $undeletedFiles));
+        }
+        $this->sendResponse(new JsonResponse(['status' => 'success', 'message' => $message]));
     }
 
     /**
@@ -207,5 +224,15 @@ class ApiPresenter extends Presenter
     {
         // Simulácia nahratia obrázka pre maznáčika
         $this->sendResponse(new JsonResponse(['message' => 'Image uploaded successfully for pet', 'petId' => $petId]));
+    }
+
+
+    public function actionSelectPet(): JsonResponse
+    {
+        $animals = $this->xmlManager->readAnimalsFromFile();
+        $this->sendResponse(new JsonResponse([
+            'status' => 'success',
+            'data' => $animals
+        ]));
     }
 }

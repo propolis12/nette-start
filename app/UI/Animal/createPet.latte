@@ -20,30 +20,29 @@
             // Vyhľadanie formulára podľa ID
             $('#frm-createPet').on('submit', function(e) {
                 e.preventDefault();  // Zabraň, aby sa formulár odoslal klasicky
-                var formData = {
-                    id: $('input[name="id"]').val(),
-                    name: $('input[name="name"]').val(),
-                    category: {
-                        id: $('input[name="category[id]"]').val(),
-                        name: $('input[name="category[name]"]').val(),
-                    },
-                    tags: $('input[name="tags[name]"]').val(),
-                    status: $('select[name="status"]').val()
-                };
+                console.log($('input[name="name"]').val())
+
+                var formData = new FormData(this);
+
+                console.log(formData)
 
                 // AJAX požiadavka
                 $.ajax({
-                    url: '/api/add',  // URL na tvoj API endpoint
+                    url: '/api/pet',  // URL na tvoj API endpoint
                     type: 'POST',  // Typ požiadavky
-                    data: JSON.stringify(formData),  // Dáta prevedené na JSON string
-                    contentType: 'application/json',  // Nastav záhlavie na JSON
+                    data: formData,  // FormData obsahuje všetky dáta aj súbory
+                    processData: false, // Zakáž jQuery spracovať dáta (je to potrebné pre FormData)
+                    contentType: false, // Zakáž jQuery nastaviť typ obsahu, FormData to spraví
                     success: function(response) {
                         // Spracovanie úspešnej odpovede
-                        alert(response.message);  // Napr. zobrazenie správy
+                        alert(response.message);
+                        console.log(response.data); // Napr. zobrazenie správy
                     },
                     error: function(xhr) {
+                        var response = xhr.responseJSON;
                         // Spracovanie chyby
-                        alert('Nastala chyba pri odosielaní formulára.');
+                        alert(response.message);
+                        console.log(response.data)
                     }
                 });
             });
