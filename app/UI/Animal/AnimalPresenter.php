@@ -84,18 +84,18 @@ class AnimalPresenter extends Presenter
             if ($animal->getId() === $animalId) {
                 $this->template->animal = $animal;
 
-                $this->getComponent('createPet')->getComponent('name')->setValue($animal->getName());
+//                $this->getComponent('createPet')->getComponent('name')->setValue($animal->getName());
                 $this->getComponent('createPet')->getComponent('id')->setValue($animal->getId());
-                $this->getComponent('createPet')->getComponent('category')->getComponent('id')->setValue($animal->getCategory()->getId())->setHtmlAttribute('readonly', 'readonly');
-                $this->getComponent('createPet')->getComponent('category')->getComponent('name')->setValue($animal->getCategory()->getName());
-                $tags = $animal->getTags();
-                foreach ($tags as $tag) {
-                    $names[] = $tag->getName();
-                }
-                $tagsString = implode(',', $names);
-                $this->getComponent('createPet')->getComponent('tags')->getComponent('name')->setValue($tagsString);
-
-                $this->getComponent('createPet')->getComponent('photoUrls')->setValue(implode(', ', $animal->getPhotoUrls()));
+//                $this->getComponent('createPet')->getComponent('category')->getComponent('id')->setValue($animal->getCategory()->getId())->setHtmlAttribute('readonly', 'readonly');
+//                $this->getComponent('createPet')->getComponent('category')->getComponent('name')->setValue($animal->getCategory()->getName());
+//                $tags = $animal->getTags();
+//                foreach ($tags as $tag) {
+//                    $names[] = $tag->getName();
+//                }
+//                $tagsString = implode(',', $names);
+//                $this->getComponent('createPet')->getComponent('tags')->getComponent('name')->setValue($tagsString);
+//
+//                $this->getComponent('createPet')->getComponent('photoUrls')->setValue(implode(', ', $animal->getPhotoUrls()));
 
                 break;
             }

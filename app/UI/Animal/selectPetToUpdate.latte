@@ -3,20 +3,12 @@
     <div><a class="back-link" n:href="Home:default">Späť</a></div>
     <input type="hidden" id="action" value="{$action}">
     <div class="animals">
-{*        <div class="animal-card" n:foreach="$animals as $animal">*}
-{*            <a n:href="Animal:{$action} $animal->getId()">*}
-{*                id: {$animal->getId()} <br>*}
-{*                name: {$animal->getName()}*}
-{*            </a>*}
-{*            <div class="animal-image" style="max-width: 100%">*}
-{*                {if count($animal->getPhotoUrls()) > 0}*}
-{*                    <img src="{$animal->getPhotoUrls()[0]}" alt="animal image">*}
-{*                {else}*}
-{*                    <p>No image available</p>*}
-{*                {/if}*}
-{*            </div>*}
-{*        </div>*}
 
+    </div>
+
+
+    <div id="form">
+        {control createPet}
     </div>
 {/block}
 
@@ -33,11 +25,11 @@
             var url = '/api/select-pet';
 
             console.log(action)
-            loadAnimals(action, url)
+            loadAnimals(url)
 
             $(document).on('click', '.animal-action', function (event) {
                 event.preventDefault();  // Zabráni presmerovaniu na inú stránku
-                var httpMethod = {$action};
+                var httpMethod = 'GET';
                 var actionUrl = $(this).data('action-url');
                 var id = $(this).data('id')// Získa ID zvieraťa z data-id
 
@@ -46,7 +38,15 @@
                     url: actionUrl,  // Alebo '/api/update/' + petId, ak je to update
                     type: httpMethod,  // Alebo DELETE, ak ide o mazanie
                     success: function (response) {
-                        alert(response.message);  // Oznám užívateľovi úspech
+                        var pet = response.data;
+                        console.log(pet.id)
+                        // Nastavenie hodnôt formulára na základe údajov, ktoré prídu z backendu
+                        $('input[name="id"]').val(pet.id);  // Nastav meno
+                        $('#frm-createPet-name').val(pet.name);  // Nastav meno
+                        $('#frm-createPet-category-id').val(pet.category.id);  // Nastav ID kategórie
+                        $('#frm-createPet-category-name').val(pet.category.name);  // Nastav názov kategórie
+                        $('#frm-createPet-tags-name').val(pet.tags.map(tag => tag.name).join(','));  // Nastav tagy oddelené čiarkami
+                        $('#frm-createPet-status').val(pet.status);
 
                     },
                     error: function (xhr) {
@@ -54,9 +54,45 @@
                     }
                 });
 
-                loadAnimals(action, url)
+                loadAnimals(url)
             })
 
+
+            // Vyhľadanie formulára podľa ID
+            $('#frm-createPet').on('submit', function(e) {
+                e.preventDefault();  // Zabraň, aby sa formulár odoslal klasicky
+                console.log($('input[name="name"]').val())
+
+                var petId = $('input[name="id"]').val();  // Skryté pole pre ID zvieraťa
+
+                // Dynamicky vytvoriť URL s ID zvieraťa
+                var actionUrl = '/api/pet/' + petId;
+
+                var formData = new FormData(this);
+
+                console.log(formData)
+
+                // AJAX požiadavka
+                $.ajax({
+                    url: actionUrl,  // URL na tvoj API endpoint
+                    type: 'POST',  // Typ požiadavky
+                    data: formData,  // FormData obsahuje všetky dáta aj súbory
+                    processData: false, // Zakáž jQuery spracovať dáta (je to potrebné pre FormData)
+                    contentType: false, // Zakáž jQuery nastaviť typ obsahu, FormData to spraví
+                    success: function(response) {
+                        // Spracovanie úspešnej odpovede
+                        alert(response.message);
+                        console.log(response.data); // Napr. zobrazenie správy
+                    },
+                    error: function(xhr) {
+                        var response = xhr.responseJSON;
+                        // Spracovanie chyby
+                        alert(response.message);
+                    }
+                });
+                console.log("nacitaj")
+                loadAnimals(url)
+            });
 
 
         });

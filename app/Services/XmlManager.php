@@ -50,8 +50,6 @@ class XmlManager
             $tagElement->addChild('name', $tag->getName());
         }
 
-
-
         $xml->asXML(self::FILE_PATH);
 
     }

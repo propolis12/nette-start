@@ -18,6 +18,12 @@
 			padding: 20px;
 		}
 
+		.container {
+			display: flex;
+			flex-direction: column;  /* Vertikálne usporiadanie */
+			align-items: center;  /* Centrovanie obsahu */
+		}
+
 		.back-link {
 			margin-bottom: 20px;
 			display: inline-block;
@@ -80,6 +86,11 @@
 		.image-wrapper img {
 			border-radius: 5px;
 			border: 1px solid #ccc;
+		}
+
+		/* Odsadenie medzi kartami a formulárom */
+		#form {
+			margin-top: 50px;  /* Pridaj väčší odsadenie nad formulárom */
 		}
 
 		.styled-form {
@@ -154,10 +165,12 @@
 			border-color: #007bff;  /* Zmena farby pri zaostrení */
 			box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);  /* Zvýraznenie tieňa pri zaostrení */
 		}
+
+
 	</style>
 
 	<script>
-		function loadAnimals(action, url) {
+		function loadAnimals(url) {
 			$.ajax({
 				url: url,  // URL na tvoj API endpoint
 				type: 'GET',  // Typ požiadavky
@@ -168,13 +181,13 @@
 						animalContainer.empty();  // Vymažeš existujúci obsah
 
 						animals.forEach(function (animal) {
-							var actionUrl = '';
-							console.log(action)
-							if (action === 'delete') {
-								actionUrl = '/api/pet/' + animal.id;
-							} else if (action === 'update') {
-								actionUrl = '/api/pet/' + animal.id;
-							}
+							var actionUrl = '/api/pet/' + animal.id;
+							// console.log(action)
+							// if (action === 'delete') {
+							// 	actionUrl = '/api/pet/' + animal.id;
+							// } else if (action === 'update') {
+							// 	actionUrl = '/api/pet/' + animal.id;
+							// }
 							var animalHTML = '<div class="animal-card">' +
 									'<a href="#" class="animal-action" data-action-url="' + actionUrl + '" data-id="' + animal.id + '">' +
 									'id: ' + animal.id + '<br>' +

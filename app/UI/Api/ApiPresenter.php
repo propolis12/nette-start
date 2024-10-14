@@ -47,14 +47,14 @@ class ApiPresenter extends Presenter
         switch ($httpRequest->getMethod()) {
             case 'GET':
                 // GET - nájdi zviera podľa ID
-                $this->findPetById($petId);
+                $this->findById($petId);
                 break;
             case 'POST':
                 // POST - update zvieraťa podľa ID
                 if ($petId === null) {
                      $this->add($httpRequest);
                 } else {
-                    $this->updatePet($petId);
+                    $this->update($httpRequest);
                 }
                 break;
             case 'DELETE':
@@ -62,7 +62,7 @@ class ApiPresenter extends Presenter
                 $this->delete($petId);
                 break;
             default:
-                $this->error('Method not allowed', \Nette\Http\IResponse::S405_METHOD_NOT_ALLOWED);
+                $this->error('Method not allowed', IResponse::S405_MethodNotAllowed);
         }
     }
 
@@ -71,50 +71,18 @@ class ApiPresenter extends Presenter
      */
     private function add(IRequest $request): JsonResponse
     {
-
-//        $httpRequest = $this->getHttpRequest();  // Získanie HTTP požiadavky
-//
-//        // Skontroluj, či ide o POST požiadavku
-//        if ($httpRequest->getMethod() !== 'POST') {
-//            $this->error('Invalid request method', IResponse::S405_MethodNotAllowed);
-//        }
-
         $postData = $request->getPost();
+        $files = $request->getFiles();
         $errors = $this->inputValidator->validate($postData);
 
         if (!empty($errors)) {
             $this->sendResponse(new JsonResponse([
                 'status' => 'error',
                 'message' => 'nepodarilo sa pridat zviera: ' . implode(', ', $errors),
-//                'data' => implode(', ', $errors),
             ]));
         }
 
-        $name = $postData['name']; // Napríklad meno zvieraťa
-        $categoryId = $postData['category']['id']; // Kategória
-        $categoryName = $postData['category']['name'];
-        $tags = $postData['tags']['name'];
-        $status = $postData['status'];
-
-        $tags = explode(',', $tags);
-
-        $tags = array_filter($tags, fn($tag) => trim($tag) !== '');
-        $tagsEntitiesArray = $this->animalService->processTags($tags);
-
-        $animal = (new Animal())
-            ->setName($name)
-            ->setCategory((new Category())->setId((int) $categoryId)->setName($categoryName))
-            ->setStatus($status)
-            ->setTags($tagsEntitiesArray);
-
-        $files = $request->getFiles(); // Toto načíta súbory z $_FILES
-        $uploadedPhotos = $files['photoUrls']; // Získať nahrané súbory
-
-        Debugger::log($uploadedPhotos, Debugger::INFO);
-
-        if (reset($uploadedPhotos) !== null) {
-            $animal->setPhotoUrls($this->animalService->processPhotoUrls($uploadedPhotos));
-        }
+        $animal = $this->animalService->hydratePet($postData, $files);
 
         $lowestAvailableId = $this->xmlManager->getLowestAvailableId();
         $animal->setId($lowestAvailableId);
@@ -130,22 +98,25 @@ class ApiPresenter extends Presenter
     /**
      * Aktualizácia maznáčika (PUT)
      */
-    public function actionUpdate(): void
+    public function update(IRequest $request): void
     {
-        // Skontroluj, že požiadavka je PUT
-        if ($this->httpRequest->getMethod() !== 'PUT') {
-            $this->error('Invalid request method', 405);
+        $postData = $request->getPost();
+        $files = $request->getFiles();
+        $errors = $this->inputValidator->validate($postData);
+
+        if (!empty($errors)) {
+            $this->sendResponse(new JsonResponse([
+                'status' => 'error',
+                'message' => 'nepodarilo sa pridat zviera: ' . implode(', ', $errors),
+            ]));
         }
 
-        // Simulácia aktualizácie maznáčika v databáze
-        $updatedPet = [
-            'id' => 1, // Dummy ID
-            'name' => 'Updated Pet',
-            'status' => 'sold'
-        ];
+        $animal = $this->animalService->hydratePet($postData, $files);
+
+        $this->xmlManager->updateExisting($animal);
 
         // Vrátenie JSON odpovede
-        $this->sendResponse(new JsonResponse(['message' => 'Pet updated successfully', 'pet' => $updatedPet]));
+        $this->sendResponse(new JsonResponse(['message' => 'Pet updated successfully', 'status' => 'success']));
     }
 
     /**
@@ -187,7 +158,7 @@ class ApiPresenter extends Presenter
     /**
      * Vyhľadanie maznáčika podľa ID (GET)
      */
-    public function actionFindById(int $petId): void
+    public function findById(int $petId): void
     {
         $pet = $this->xmlManager->getAnimalById($petId);
         if ($pet !== null) {
@@ -235,4 +206,5 @@ class ApiPresenter extends Presenter
             'data' => $animals
         ]));
     }
+
 }
