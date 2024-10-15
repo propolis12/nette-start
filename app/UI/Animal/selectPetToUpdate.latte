@@ -25,7 +25,6 @@
             var action = $('#action').val();
             var url = '/api/select-pet';
 
-            console.log(action)
             loadAnimals(url)
 
             $(document).on('click', '.animal-action', function (event) {
@@ -80,7 +79,12 @@
                 e.preventDefault();  // Zabraň, aby sa formulár odoslal klasicky
                 console.log($('input[name="name"]').val())
 
-                var petId = $('input[name="id"]').val();  // Skryté pole pre ID zvieraťa
+                var petId = $('input[name="id"]').val();
+
+                if (petId === 'create') {
+                    alert('vyberte zviera na upravu')
+                    return
+                }
 
                 // Dynamicky vytvoriť URL s ID zvieraťa
                 var actionUrl = '/api/pet/' + petId;
@@ -119,12 +123,6 @@
 
 
         });
-
-
-
-
-
-
     </script>
 
 {/block}
