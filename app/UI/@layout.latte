@@ -186,13 +186,13 @@
 	<script>
 		function loadAnimals(url) {
 			$.ajax({
-				url: url,  // URL na tvoj API endpoint
-				type: 'GET',  // Typ požiadavky
+				url: url,
+				type: 'GET',
 				success: function (response) {
 					if (response.status === 'success') {
 						var animals = response.data;
-						var animalContainer = $('.animals');  // Vyberieš kontajner pre zvieratá
-						animalContainer.empty();  // Vymažeš existujúci obsah
+						var animalContainer = $('.animals');
+						animalContainer.empty();
 
 						animals.forEach(function (animal) {
 							var actionUrl = '/api/pet/' + animal.id;
@@ -227,14 +227,12 @@
 
 							animalHTML += '</div>';
 
-							// Pridanie vygenerovaného HTML do kontajnera
 							animalContainer.append(animalHTML);
 						});
 					}
 				},
 				error: function (xhr) {
 					var response = xhr.responseJSON;
-					// Spracovanie chyby
 					alert(response.message);
 					console.log(response.data)
 				}
