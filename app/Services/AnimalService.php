@@ -36,7 +36,7 @@ class AnimalService
         $photoUrlsToSend = [];
 
         foreach ($photoUrls as $photoUrl) {
-            if ($photoUrl->isOk() && $photoUrl->isImage()) {
+            if ($photoUrl !== null && $photoUrl->isOk() && $photoUrl->isImage()) {
                 $originalFileName = $photoUrl->getName();
                 $uniqueFileName = md5(uniqid(rand(), true)) . '_' . $originalFileName;
                 $filePath = $this->wwwDir . '/images/' . $uniqueFileName;

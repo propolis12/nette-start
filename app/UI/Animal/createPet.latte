@@ -17,6 +17,8 @@
         // Vyhľadanie formulára podľa ID
         $(document).ready(function() {
 
+            $('#frm-createPet-removePhotoUrls').closest('tr').remove();  // Odstráni zaškrtávacie políčko aj s jeho kontajnerom
+
             // Vyhľadanie formulára podľa ID
             $('#frm-createPet').on('submit', function(e) {
                 e.preventDefault();  // Zabraň, aby sa formulár odoslal klasicky
@@ -28,11 +30,11 @@
 
                 // AJAX požiadavka
                 $.ajax({
-                    url: '/api/pet',  // URL na tvoj API endpoint
-                    type: 'POST',  // Typ požiadavky
-                    data: formData,  // FormData obsahuje všetky dáta aj súbory
-                    processData: false, // Zakáž jQuery spracovať dáta (je to potrebné pre FormData)
-                    contentType: false, // Zakáž jQuery nastaviť typ obsahu, FormData to spraví
+                    url: '/api/pet',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
                     success: function(response) {
                         // Spracovanie úspešnej odpovede
                         alert(response.message);
@@ -45,6 +47,7 @@
                         console.log(response.data)
                     }
                 });
+                $('#frm-createPet-photoUrls').val('');
             });
         });
     </script>

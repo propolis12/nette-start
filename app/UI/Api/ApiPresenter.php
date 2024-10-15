@@ -113,6 +113,20 @@ class ApiPresenter extends Presenter
 
         $animal = $this->animalService->hydratePet($postData, $files);
 
+        $currentStoredAnimal = $this->xmlManager->getAnimalById($animal->getId());
+        if (isset($postData['removePhotoUrls']) && $postData['removePhotoUrls']) {
+
+            $undeletedFiles = $this->animalService->deleteImages($currentStoredAnimal);
+            if (count($undeletedFiles) > 0) {
+                $this->flashMessage(sprintf( 'Tieto subory sa nepodarilo zmazat %s', implode(', ', $undeletedFiles)), 'warning');
+            }
+
+        } else {
+            Debugger::log($files, Debugger::INFO);
+
+            $animal->setPhotoUrls(array_merge($currentStoredAnimal->getPhotoUrls(), $this->animalService->processPhotoUrls($files['photoUrls'])));
+        }
+
         $this->xmlManager->updateExisting($animal);
 
         // Vrátenie JSON odpovede

@@ -169,6 +169,10 @@ class AnimalPresenter extends Presenter
             ->addRule(Form::MaxFileSize, 'Maximálna veľkosť súboru je 2 MB', 2 * 1024 * 1024)
             ->setHtmlAttribute('class', 'form-control');
 
+        $form->addCheckbox('removePhotoUrls', 'Vymazať aktuálne obrázky');
+
+
+
         // Select pre status
         $form->addSelect('status', 'Status', [
             'available' => self::STATUS_AVAILABLE,

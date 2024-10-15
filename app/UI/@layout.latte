@@ -166,6 +166,20 @@
 			box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);  /* Zvýraznenie tieňa pri zaostrení */
 		}
 
+		.image-container {
+			display: flex;
+			flex-wrap: wrap;
+			margin-top: 20px;
+		}
+
+		.image-container img {
+			max-width: 150px;
+			margin-right: 10px;
+			margin-bottom: 10px;
+			border: 1px solid #ccc;
+			border-radius: 5px;
+		}
+
 
 	</style>
 
@@ -182,12 +196,7 @@
 
 						animals.forEach(function (animal) {
 							var actionUrl = '/api/pet/' + animal.id;
-							// console.log(action)
-							// if (action === 'delete') {
-							// 	actionUrl = '/api/pet/' + animal.id;
-							// } else if (action === 'update') {
-							// 	actionUrl = '/api/pet/' + animal.id;
-							// }
+
 							var animalHTML = '<div class="animal-card">' +
 									'<a href="#" class="animal-action" data-action-url="' + actionUrl + '" data-id="' + animal.id + '">' +
 									'id: ' + animal.id + '<br>' +
@@ -204,6 +213,10 @@
 							} else {
 								animalHTML += '<div class="animal-tags"><p>No tags available</p></div>';
 							}
+
+							animalHTML += '<div class="animal-status"><strong>Status:</strong> ' + animal.status + '</div>';
+							animalHTML += '<div class="animal-category"><strong>Category:</strong> ' + animal.category.name + '</div>';
+							animalHTML += '<div class="animal-category-id"><strong>Category Id:</strong> ' + animal.category.id + '</div>';
 
 							animalHTML += '<div class="animal-image" style="max-width: 100%">' +
 									(animal.photoUrls.length > 0

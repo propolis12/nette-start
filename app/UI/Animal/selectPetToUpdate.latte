@@ -6,19 +6,20 @@
 
     </div>
 
+    {if $action == 'update'}
+        <div id="animal-images" class="image-container">
+            <!-- Obrázky zvieraťa sa zobrazia tu -->
+        </div>
 
-    <div id="form">
-        {control createPet}
-    </div>
+        <div id="form">
+            {control createPet}
+        </div>
+    {/if}
 {/block}
 
 {block scripts}
 
-{*    <script type="module" src="/Scripts/functions.js"></script>*}
-
     <script>
-
-        // import { loadAnimals } from '/Scripts/functions.js';
         $(document).ready(function() {
 
             var action = $('#action').val();
@@ -29,31 +30,47 @@
 
             $(document).on('click', '.animal-action', function (event) {
                 event.preventDefault();  // Zabráni presmerovaniu na inú stránku
-                var httpMethod = 'GET';
-                var actionUrl = $(this).data('action-url');
-                var id = $(this).data('id')// Získa ID zvieraťa z data-id
 
-                // Tu pošli AJAX požiadavku na zmazanie alebo update zvieraťa
+                var httpMethod = '';
+                if (action === 'update') {
+                    httpMethod = 'GET'
+                } else if (action === 'delete') {
+                    httpMethod = 'DELETE'
+                }
+
+                var actionUrl = $(this).data('action-url');
+
                 $.ajax({
                     url: actionUrl,  // Alebo '/api/update/' + petId, ak je to update
                     type: httpMethod,  // Alebo DELETE, ak ide o mazanie
                     success: function (response) {
                         var pet = response.data;
-                        console.log(pet.id)
-                        // Nastavenie hodnôt formulára na základe údajov, ktoré prídu z backendu
-                        $('input[name="id"]').val(pet.id);  // Nastav meno
-                        $('#frm-createPet-name').val(pet.name);  // Nastav meno
-                        $('#frm-createPet-category-id').val(pet.category.id);  // Nastav ID kategórie
-                        $('#frm-createPet-category-name').val(pet.category.name);  // Nastav názov kategórie
-                        $('#frm-createPet-tags-name').val(pet.tags.map(tag => tag.name).join(','));  // Nastav tagy oddelené čiarkami
+
+                        $('input[name="id"]').val(pet.id);
+                        $('#frm-createPet-name').val(pet.name);
+                        $('#frm-createPet-category-id').val(pet.category.id);
+                        $('#frm-createPet-category-name').val(pet.category.name);
+                        $('#frm-createPet-tags-name').val(pet.tags.map(tag => tag.name).join(','));
                         $('#frm-createPet-status').val(pet.status);
+
+                        $('#animal-images').empty();
+
+                        // Načítaj a zobraz obrázky, ak existujú
+                        if (pet.photoUrls.length > 0) {
+                            pet.photoUrls.forEach(function(url) {
+                                var imgElement = '<img src="' + url + '" alt="animal image" style="max-width: 150px; margin: 5px;">';
+                                $('#animal-images').append(imgElement);
+                            });
+                        } else {
+                            $('#animal-images').append('<p>No images available.</p>');
+                        }
 
                     },
                     error: function (xhr) {
                         alert('Chyba pri spracovaní požiadavky.');
                     }
                 });
-
+                $('#frm-createPet-photoUrls').val('');
                 loadAnimals(url)
             })
 
@@ -74,24 +91,30 @@
 
                 // AJAX požiadavka
                 $.ajax({
-                    url: actionUrl,  // URL na tvoj API endpoint
-                    type: 'POST',  // Typ požiadavky
-                    data: formData,  // FormData obsahuje všetky dáta aj súbory
-                    processData: false, // Zakáž jQuery spracovať dáta (je to potrebné pre FormData)
-                    contentType: false, // Zakáž jQuery nastaviť typ obsahu, FormData to spraví
+                    url: actionUrl,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
                     success: function(response) {
-                        // Spracovanie úspešnej odpovede
+
                         alert(response.message);
-                        console.log(response.data); // Napr. zobrazenie správy
+                        console.log(response.data);
                     },
                     error: function(xhr) {
                         var response = xhr.responseJSON;
-                        // Spracovanie chyby
                         alert(response.message);
                     }
                 });
                 console.log("nacitaj")
+                $('#frm-createPet-photoUrls').val('');
+
+                $('#animal-images').empty();
+
                 loadAnimals(url)
+
+                var element = $('.animal-action[data-action-url="/api/pet/' + petId + '"]');
+                element.click();
             });
 
 
