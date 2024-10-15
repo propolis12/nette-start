@@ -1,13 +1,11 @@
 services:
 	- App\Core\RouterFactory::createRouter
 	- GuzzleHttp\Client
-	- App\Services\AnimalApiClient(%apiUrl%)
 	- App\Services\XmlManager
 	- App\Services\AnimalService(%wwwDir%)
 	- App\Services\InputValidator
 
 parameters:
-    apiUrl: 'https://petstore3.swagger.io/api/v3/'
     wwwDir: %appDir%/../www
 
 search:
